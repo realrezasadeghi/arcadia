@@ -39,6 +39,10 @@ export interface PendingConnection {
   allowedTypes: RelationshipTypeValue[];
 }
 
+/** یک snapshot از وضعیت canvas برای undo/redo */
+interface CanvasSnapshot { nodes: CanvasNode[]; edges: CanvasEdge[]; }
+const MAX_HISTORY = 50;
+
 interface CanvasState {
   diagramId: string | null;
   modelId: string | null;
@@ -48,9 +52,20 @@ interface CanvasState {
   selectedEdgeId: string | null;
   pendingConnection: PendingConnection | null;
 
+  /** تاریخچه برای undo — آرایه از snapshots (جدیدترین آخر) */
+  past: CanvasSnapshot[];
+  /** آرایه snapshots برای redo */
+  future: CanvasSnapshot[];
+  canUndo: boolean;
+  canRedo: boolean;
+
   initCanvas: (diagramId: string, modelId: string, nodes: CanvasNode[], edges: CanvasEdge[]) => void;
   setNodes: (nodes: CanvasNode[]) => void;
   setEdges: (edges: CanvasEdge[]) => void;
+  /** ذخیره snapshot فعلی در تاریخچه — قبل از تغییرات ساختاری */
+  pushHistory: () => void;
+  undo: () => void;
+  redo: () => void;
   addNode: (node: CanvasNode) => void;
   updateNodePosition: (id: string, position: XYPosition) => void;
   updateNodeData: (id: string, data: Partial<ElementNodeData>) => void;
@@ -63,7 +78,7 @@ interface CanvasState {
   reset: () => void;
 }
 
-export const useCanvasStore = create<CanvasState>((set) => ({
+export const useCanvasStore = create<CanvasState>((set, get) => ({
   diagramId: null,
   modelId: null,
   nodes: [],
@@ -71,12 +86,67 @@ export const useCanvasStore = create<CanvasState>((set) => ({
   selectedNodeId: null,
   selectedEdgeId: null,
   pendingConnection: null,
+  past: [],
+  future: [],
+  canUndo: false,
+  canRedo: false,
 
   initCanvas: (diagramId, modelId, nodes, edges) =>
-    set({ diagramId, modelId, nodes, edges, selectedNodeId: null, selectedEdgeId: null }),
+    set({
+      diagramId, modelId, nodes, edges,
+      selectedNodeId: null, selectedEdgeId: null,
+      past: [], future: [], canUndo: false, canRedo: false,
+    }),
 
   setNodes: (nodes) => set({ nodes }),
   setEdges: (edges) => set({ edges }),
+
+  /**
+   * snapshot وضعیت فعلی را در past ذخیره می‌کند.
+   * future را پاک می‌کند (چون مسیر جدید شروع می‌شود).
+   */
+  pushHistory: () =>
+    set((s) => {
+      const snapshot: CanvasSnapshot = { nodes: s.nodes, edges: s.edges };
+      const newPast = [...s.past, snapshot].slice(-MAX_HISTORY);
+      return { past: newPast, future: [], canUndo: true, canRedo: false };
+    }),
+
+  undo: () =>
+    set((s) => {
+      if (s.past.length === 0) return {};
+      const newPast = [...s.past];
+      const prev = newPast.pop()!;
+      const newFuture = [...s.future, { nodes: s.nodes, edges: s.edges }];
+      return {
+        nodes: prev.nodes,
+        edges: prev.edges,
+        past: newPast,
+        future: newFuture,
+        canUndo: newPast.length > 0,
+        canRedo: true,
+        selectedNodeId: null,
+        selectedEdgeId: null,
+      };
+    }),
+
+  redo: () =>
+    set((s) => {
+      if (s.future.length === 0) return {};
+      const newFuture = [...s.future];
+      const next = newFuture.pop()!;
+      const newPast = [...s.past, { nodes: s.nodes, edges: s.edges }];
+      return {
+        nodes: next.nodes,
+        edges: next.edges,
+        past: newPast,
+        future: newFuture,
+        canUndo: true,
+        canRedo: newFuture.length > 0,
+        selectedNodeId: null,
+        selectedEdgeId: null,
+      };
+    }),
 
   addNode: (node) => set((s) => ({ nodes: [...s.nodes, node] })),
 
@@ -106,8 +176,10 @@ export const useCanvasStore = create<CanvasState>((set) => ({
   selectNode: (id) => set({ selectedNodeId: id, selectedEdgeId: null }),
   selectEdge: (id) => set({ selectedEdgeId: id, selectedNodeId: null }),
   setPendingConnection: (conn) => set({ pendingConnection: conn }),
+
   reset: () => set({
     diagramId: null, modelId: null, nodes: [], edges: [],
     selectedNodeId: null, selectedEdgeId: null, pendingConnection: null,
+    past: [], future: [], canUndo: false, canRedo: false,
   }),
 }));

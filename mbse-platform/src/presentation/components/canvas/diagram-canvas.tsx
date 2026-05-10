@@ -55,6 +55,7 @@ function DiagramCanvasInner({
     setNodes, setEdges,
     addNode, updateNodePosition, addEdge, removeNode, removeEdge,
     selectNode, selectEdge, setPendingConnection, pendingConnection,
+    pushHistory, undo, redo,
   } = useCanvasStore();
 
   // ─── RF change handlers — apply changes directly to store ─────────────────
@@ -68,9 +69,10 @@ function DiagramCanvasInner({
 
   // ─── Node drag end → persist layout ───────────────────────────────────────
   const handleNodeDragStop: NodeDragHandler = useCallback((_, node) => {
+    pushHistory();
     updateNodePosition(node.id, node.position);
     notifyChange();
-  }, [updateNodePosition, notifyChange]);
+  }, [updateNodePosition, notifyChange, pushHistory]);
 
   // ─── Connect handler ───────────────────────────────────────────────────────
   const handleConnect = useCallback((connection: Connection) => {
@@ -98,6 +100,7 @@ function DiagramCanvasInner({
     type: RelationshipTypeValue, name: string,
   ) {
     try {
+      pushHistory();
       const rel = await container.connectElements.execute({ modelId, sourceElementId: sourceId, targetElementId: targetId, relationshipType: type, name });
       addEdge({
         id: rel.id, source: sourceId, target: targetId, type: "architecture-edge",
@@ -117,6 +120,7 @@ function DiagramCanvasInner({
     const position = { x: e.clientX - bounds.left - 80, y: e.clientY - bounds.top - 30 };
 
     try {
+      pushHistory();
       const element = await container.createElement.execute({ modelId, type: typeValue, name: ElementType.from(typeValue).labelFa });
       await container.repos.diagram.updateLayout(diagramId, {
         elementLayouts: [
@@ -130,20 +134,34 @@ function DiagramCanvasInner({
       });
       qc.invalidateQueries({ queryKey: MODEL_KEYS.elements(modelId) });
     } catch (err) { console.error("Element creation failed:", err); }
-  }, [modelId, diagramId, nodes, addNode, qc]);
+  }, [modelId, diagramId, nodes, addNode, qc, pushHistory]);
 
-  // ─── Delete key ────────────────────────────────────────────────────────────
+  // ─── Keyboard shortcuts (Delete, Ctrl+Z, Ctrl+Shift+Z) ────────────────────
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
+      // Undo: Ctrl+Z
+      if ((e.ctrlKey || e.metaKey) && e.key === "z" && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+        return;
+      }
+      // Redo: Ctrl+Shift+Z or Ctrl+Y
+      if (((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "z") ||
+          ((e.ctrlKey || e.metaKey) && e.key === "y")) {
+        e.preventDefault();
+        redo();
+        return;
+      }
+      // Delete selected
       if ((e.key === "Delete" || e.key === "Backspace") && e.target === document.body) {
         const { selectedNodeId, selectedEdgeId } = useCanvasStore.getState();
-        if (selectedNodeId) removeNode(selectedNodeId);
-        else if (selectedEdgeId) removeEdge(selectedEdgeId);
+        if (selectedNodeId) { pushHistory(); removeNode(selectedNodeId); }
+        else if (selectedEdgeId) { pushHistory(); removeEdge(selectedEdgeId); }
       }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [removeNode, removeEdge]);
+  }, [removeNode, removeEdge, undo, redo, pushHistory]);
 
   return (
     <div className="flex flex-col h-full">
