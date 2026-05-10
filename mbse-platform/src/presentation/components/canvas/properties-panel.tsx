@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, CheckCircle2, Archive, GitMerge, Trash2, Loader2 } from "lucide-react";
+import { X, CheckCircle2, Archive, GitMerge, Trash2, Loader2, RotateCcw } from "lucide-react";
 import { Button } from "@/presentation/components/ui/button";
 import { Input } from "@/presentation/components/ui/input";
 import { Label } from "@/presentation/components/ui/label";
@@ -15,6 +15,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { container } from "@/infrastructure/api/service-container";
 import { MODEL_KEYS } from "@/presentation/hooks/use-models";
 import { useElementTraces, useDeleteTraceLink } from "@/presentation/hooks/use-trace-links";
+import { toast } from "@/presentation/stores/toast.store";
+import type { ElementStatus } from "@/domain/entities/element.entity";
 import { CreateTraceDialog } from "@/presentation/components/traceability/create-trace-dialog";
 import type { ElementTypeValue } from "@/domain/value-objects/element-type.vo";
 
@@ -83,6 +85,20 @@ function NodeProperties({
       onUpdate(node.id, { name: updated.name, description: updated.description });
       qc.invalidateQueries({ queryKey: MODEL_KEYS.elements(node.data.modelId) });
     },
+    onError: () => toast.error("خطا در ذخیره تغییرات"),
+  });
+
+  const statusMutation = useMutation({
+    mutationFn: (status: ElementStatus) =>
+      container.repos.model.updateElement(node.data.elementId, { properties: { status } }),
+    onSuccess: (updated) => {
+      const newStatus = updated.status;
+      onUpdate(node.id, { status: newStatus });
+      qc.invalidateQueries({ queryKey: MODEL_KEYS.elements(node.data.modelId) });
+      const label = newStatus === "VALIDATED" ? "اعتبارسنجی شد" : newStatus === "DEPRECATED" ? "منسوخ شد" : "به پیش‌نویس برگشت";
+      toast.success(label, node.data.name);
+    },
+    onError: () => toast.error("خطا در تغییر وضعیت"),
   });
 
   const { data: traces, isLoading: tracesLoading } = useElementTraces(node.data.elementId);
@@ -165,10 +181,31 @@ function NodeProperties({
       <div className="flex flex-col gap-1.5">
         <p className="text-xs text-muted-foreground">عملیات سریع</p>
         <div className="flex flex-col gap-1">
-          <Button variant="ghost" size="sm" className="justify-start gap-2 h-7 text-xs">
-            <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
-            اعتبارسنجی
-          </Button>
+          {node.data.status !== "VALIDATED" && (
+            <Button
+              variant="ghost" size="sm"
+              className="justify-start gap-2 h-7 text-xs"
+              disabled={statusMutation.isPending}
+              onClick={() => statusMutation.mutate("VALIDATED")}
+            >
+              {statusMutation.isPending
+                ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                : <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
+              }
+              اعتبارسنجی
+            </Button>
+          )}
+          {node.data.status !== "DRAFT" && (
+            <Button
+              variant="ghost" size="sm"
+              className="justify-start gap-2 h-7 text-xs"
+              disabled={statusMutation.isPending}
+              onClick={() => statusMutation.mutate("DRAFT")}
+            >
+              <RotateCcw className="h-3.5 w-3.5 text-muted-foreground" />
+              بازگشت به پیش‌نویس
+            </Button>
+          )}
           <Button
             variant="ghost" size="sm"
             className="justify-start gap-2 h-7 text-xs"
@@ -177,10 +214,17 @@ function NodeProperties({
             <GitMerge className="h-3.5 w-3.5 text-primary" />
             افزودن Trace Link
           </Button>
-          <Button variant="ghost" size="sm" className="justify-start gap-2 h-7 text-xs text-destructive hover:text-destructive">
-            <Archive className="h-3.5 w-3.5" />
-            منسوخ کردن
-          </Button>
+          {node.data.status !== "DEPRECATED" && (
+            <Button
+              variant="ghost" size="sm"
+              className="justify-start gap-2 h-7 text-xs text-destructive hover:text-destructive"
+              disabled={statusMutation.isPending}
+              onClick={() => statusMutation.mutate("DEPRECATED")}
+            >
+              <Archive className="h-3.5 w-3.5" />
+              منسوخ کردن
+            </Button>
+          )}
         </div>
       </div>
 

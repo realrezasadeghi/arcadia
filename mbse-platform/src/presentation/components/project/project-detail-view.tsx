@@ -1,11 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Users, Loader2, GitMerge } from "lucide-react";
 import { Badge } from "@/presentation/components/ui/badge";
 import { Button } from "@/presentation/components/ui/button";
 import { LayerCard } from "./layer-card";
+import { ManageMembersDialog } from "./manage-members-dialog";
 import { useProject } from "@/presentation/hooks/use-projects";
+import { useCurrentUser } from "@/presentation/hooks/use-auth";
 import { Layer } from "@/domain/value-objects/layer.vo";
 
 interface ProjectDetailViewProps {
@@ -16,6 +19,8 @@ const LAYERS = Layer.all();
 
 export function ProjectDetailView({ projectId }: ProjectDetailViewProps) {
   const { data: project, isLoading, isError } = useProject(projectId);
+  const { data: currentUser } = useCurrentUser();
+  const [membersOpen, setMembersOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -60,10 +65,15 @@ export function ProjectDetailView({ projectId }: ProjectDetailViewProps) {
             <p className="mt-1 text-sm text-muted-foreground">{project.description}</p>
           )}
           <div className="flex items-center gap-3 mt-2">
-            <span className="flex items-center gap-1 text-xs text-muted-foreground">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 gap-1.5 px-2 text-xs text-muted-foreground hover:text-foreground"
+              onClick={() => setMembersOpen(true)}
+            >
               <Users className="h-3.5 w-3.5" />
               {project.members.length} عضو
-            </span>
+            </Button>
             {project.members.map((m) => (
               <Badge key={m.userId} variant="secondary" className="text-[10px] px-1.5 py-0">
                 {m.role === "OWNER" ? "مالک" : m.role === "EDITOR" ? "ویرایشگر" : "بیننده"}
@@ -100,6 +110,16 @@ export function ProjectDetailView({ projectId }: ProjectDetailViewProps) {
           <LayerCard key={layer.value} layer={layer} projectId={projectId} />
         ))}
       </div>
+
+      {/* Members dialog */}
+      {currentUser && (
+        <ManageMembersDialog
+          open={membersOpen}
+          onOpenChange={setMembersOpen}
+          project={project}
+          currentUser={currentUser}
+        />
+      )}
     </div>
   );
 }

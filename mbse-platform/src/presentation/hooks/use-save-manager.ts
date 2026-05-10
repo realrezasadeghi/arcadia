@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { useUIStore } from "@/presentation/stores/ui.store";
 import { container } from "@/infrastructure/api/service-container";
 import { useCanvasStore } from "@/presentation/stores/canvas.store";
+import { toast } from "@/presentation/stores/toast.store";
 
 const DEBOUNCE_MS = 2000;
 const MAX_PENDING = 5;
@@ -37,6 +38,7 @@ export function useSaveManager() {
       setSaveStatus("saved");
     } catch {
       setSaveStatus("error");
+      toast.error("خطا در ذخیره دیاگرام");
     }
   }, [diagramId, nodes, setSaveStatus, resetPending]);
 

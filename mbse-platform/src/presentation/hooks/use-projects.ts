@@ -2,6 +2,8 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { container } from "@/infrastructure/api/service-container";
+import { toast } from "@/presentation/stores/toast.store";
+import type { ProjectRole } from "@/domain/entities/project.entity";
 
 export const PROJECT_KEYS = {
   all:    () => ["projects"] as const,
@@ -28,7 +30,11 @@ export function useCreateProject() {
   return useMutation({
     mutationFn: (input: { name: string; description: string }) =>
       container.createProject.execute(input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: PROJECT_KEYS.all() }),
+    onSuccess: (p) => {
+      qc.invalidateQueries({ queryKey: PROJECT_KEYS.all() });
+      toast.success("پروژه ایجاد شد", p.name.value);
+    },
+    onError: () => toast.error("خطا در ایجاد پروژه"),
   });
 }
 
@@ -40,7 +46,9 @@ export function useUpdateProject() {
     onSuccess: (_, { id }) => {
       qc.invalidateQueries({ queryKey: PROJECT_KEYS.all() });
       qc.invalidateQueries({ queryKey: PROJECT_KEYS.detail(id) });
+      toast.success("پروژه به‌روزرسانی شد");
     },
+    onError: () => toast.error("خطا در به‌روزرسانی پروژه"),
   });
 }
 
@@ -48,6 +56,51 @@ export function useDeleteProject() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => container.deleteProject.execute(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: PROJECT_KEYS.all() }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: PROJECT_KEYS.all() });
+      toast.success("پروژه حذف شد");
+    },
+    onError: () => toast.error("خطا در حذف پروژه"),
+  });
+}
+
+// ─── Member Management ────────────────────────────────────────────────────────
+
+export function useAddMember() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ projectId, userId, role }: { projectId: string; userId: string; role: Exclude<ProjectRole, "OWNER"> }) =>
+      container.repos.project.addMember(projectId, userId, role),
+    onSuccess: (_, { projectId }) => {
+      qc.invalidateQueries({ queryKey: PROJECT_KEYS.detail(projectId) });
+      toast.success("عضو اضافه شد");
+    },
+    onError: (e: Error) => toast.error("خطا در افزودن عضو", e.message),
+  });
+}
+
+export function useChangeMemberRole() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ projectId, userId, role }: { projectId: string; userId: string; role: Exclude<ProjectRole, "OWNER"> }) =>
+      container.repos.project.changeMemberRole(projectId, userId, role),
+    onSuccess: (_, { projectId }) => {
+      qc.invalidateQueries({ queryKey: PROJECT_KEYS.detail(projectId) });
+      toast.success("نقش عضو تغییر کرد");
+    },
+    onError: (e: Error) => toast.error("خطا در تغییر نقش", e.message),
+  });
+}
+
+export function useRemoveMember() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ projectId, userId }: { projectId: string; userId: string }) =>
+      container.repos.project.removeMember(projectId, userId),
+    onSuccess: (_, { projectId }) => {
+      qc.invalidateQueries({ queryKey: PROJECT_KEYS.detail(projectId) });
+      toast.success("عضو حذف شد");
+    },
+    onError: (e: Error) => toast.error("خطا در حذف عضو", e.message),
   });
 }

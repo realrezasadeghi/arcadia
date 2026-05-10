@@ -1,5 +1,5 @@
 import type { IProjectRepository } from "@/domain/ports/project.repository.port";
-import { Project } from "@/domain/entities/project.entity";
+import { Project, type ProjectRole } from "@/domain/entities/project.entity";
 import { httpClient } from "../http/http-client";
 
 /** Raw shape که از API می‌آید */
@@ -50,6 +50,21 @@ export class ProjectRepository implements IProjectRepository {
 
   async delete(id: string): Promise<void> {
     await httpClient.delete(`${this.base}/${id}`);
+  }
+
+  async addMember(projectId: string, userId: string, role: Exclude<ProjectRole, "OWNER">): Promise<Project> {
+    const raw = await httpClient.post<ProjectRaw>(`${this.base}/${projectId}/members`, { userId, role });
+    return toEntity(raw);
+  }
+
+  async changeMemberRole(projectId: string, userId: string, role: Exclude<ProjectRole, "OWNER">): Promise<Project> {
+    const raw = await httpClient.patch<ProjectRaw>(`${this.base}/${projectId}/members/${userId}`, { role });
+    return toEntity(raw);
+  }
+
+  async removeMember(projectId: string, userId: string): Promise<Project> {
+    const raw = await httpClient.delete<ProjectRaw>(`${this.base}/${projectId}/members/${userId}`);
+    return toEntity(raw);
   }
 }
 
