@@ -1,40 +1,52 @@
-import type {
-  ArchitectureModel,
-  CreateModelInput,
-  UpdateModelInput,
-} from "../entities/model.entity";
-import type {
-  ModelElement,
-  CreateElementInput,
-  UpdateElementInput,
-} from "../entities/element.entity";
-import type {
-  Relationship,
-  CreateRelationshipInput,
-  UpdateRelationshipInput,
-} from "../entities/relationship.entity";
+import type { ArchitectureModel } from "../entities/model.entity";
+import type { ModelElement } from "../entities/element.entity";
+import type { Relationship } from "../entities/relationship.entity";
+import type { RelationshipType } from "../value-objects/relationship-type.vo";
 import type { Layer } from "../value-objects/layer.vo";
 
+export interface CreateModelDTO {
+  projectId: string;
+  layer: Layer;
+  name: string;
+  description?: string;
+}
+
+export interface CreateElementDTO {
+  modelId: string;
+  type: string;
+  name: string;
+  description?: string;
+  properties?: Record<string, unknown>;
+}
+
+export interface CreateRelationshipDTO {
+  modelId: string;
+  type: RelationshipType;
+  sourceElementId: string;
+  targetElementId: string;
+  name?: string;
+  description?: string;
+}
+
 export interface IModelRepository {
-  // ─── Architecture Models ──────────────────────────────────────────────────
+  // ─── Models ────────────────────────────────────────────────────────────────
   findModelsByProject(projectId: string): Promise<ArchitectureModel[]>;
   findModelById(id: string): Promise<ArchitectureModel | null>;
   findModelByProjectAndLayer(projectId: string, layer: Layer): Promise<ArchitectureModel | null>;
-  createModel(input: CreateModelInput): Promise<ArchitectureModel>;
-  updateModel(id: string, input: UpdateModelInput): Promise<ArchitectureModel>;
+  createModel(dto: CreateModelDTO): Promise<ArchitectureModel>;
+  updateModel(id: string, dto: Partial<CreateModelDTO>): Promise<ArchitectureModel>;
   deleteModel(id: string): Promise<void>;
 
-  // ─── Elements ─────────────────────────────────────────────────────────────
+  // ─── Elements ──────────────────────────────────────────────────────────────
   findElementsByModel(modelId: string): Promise<ModelElement[]>;
   findElementById(id: string): Promise<ModelElement | null>;
-  createElement(input: CreateElementInput): Promise<ModelElement>;
-  updateElement(id: string, input: UpdateElementInput): Promise<ModelElement>;
+  createElement(dto: CreateElementDTO): Promise<ModelElement>;
+  updateElement(id: string, dto: Partial<CreateElementDTO>): Promise<ModelElement>;
   deleteElement(id: string): Promise<void>;
 
-  // ─── Relationships ────────────────────────────────────────────────────────
+  // ─── Relationships ─────────────────────────────────────────────────────────
   findRelationshipsByModel(modelId: string): Promise<Relationship[]>;
-  findRelationshipById(id: string): Promise<Relationship | null>;
-  createRelationship(input: CreateRelationshipInput): Promise<Relationship>;
-  updateRelationship(id: string, input: UpdateRelationshipInput): Promise<Relationship>;
+  createRelationship(dto: CreateRelationshipDTO): Promise<Relationship>;
+  updateRelationship(id: string, dto: Partial<CreateRelationshipDTO>): Promise<Relationship>;
   deleteRelationship(id: string): Promise<void>;
 }

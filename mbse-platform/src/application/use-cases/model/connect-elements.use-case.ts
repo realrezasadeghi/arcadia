@@ -1,21 +1,19 @@
 import type { IModelRepository } from "@/domain/ports/model.repository.port";
-import type { Relationship } from "@/domain/entities/relationship.entity";
-import type { RelationshipType } from "@/domain/value-objects/relationship-type.vo";
-import { isConnectionAllowed } from "@/domain/rules/connection-rules";
+import { Relationship } from "@/domain/entities/relationship.entity";
+import { ElementType } from "@/domain/value-objects/element-type.vo";
+import { RelationshipType } from "@/domain/value-objects/relationship-type.vo";
+import { ConnectionPolicy } from "@/domain/policies/connection.policy";
+import { EntityNotFoundError } from "@/domain/errors/domain.error";
 
 export interface ConnectElementsInput {
   modelId: string;
   sourceElementId: string;
   targetElementId: string;
-  relationshipType: RelationshipType;
+  relationshipType: string;
   name?: string;
   description?: string;
 }
 
-/**
- * ConnectElementsUseCase validates connection rules before creating a relationship.
- * This enforces Arcadia constraints at the application layer.
- */
 export class ConnectElementsUseCase {
   constructor(private readonly repository: IModelRepository) {}
 
@@ -25,22 +23,19 @@ export class ConnectElementsUseCase {
       this.repository.findElementById(input.targetElementId),
     ]);
 
-    if (!source) throw new Error("عنصر منبع یافت نشد");
-    if (!target) throw new Error("عنصر مقصد یافت نشد");
+    if (!source) throw new EntityNotFoundError("Element", input.sourceElementId);
+    if (!target) throw new EntityNotFoundError("Element", input.targetElementId);
 
-    const validation = isConnectionAllowed(
-      source.type,
-      target.type,
-      input.relationshipType
-    );
+    const sourceType = ElementType.from(source.type.value);
+    const targetType = ElementType.from(target.type.value);
+    const relType = RelationshipType.from(input.relationshipType);
 
-    if (!validation.allowed) {
-      throw new Error(validation.reason ?? "اتصال مجاز نیست");
-    }
+    // Policy validation — throws ConnectionNotAllowedError if invalid
+    ConnectionPolicy.assertAllowed(sourceType, targetType, relType);
 
     return this.repository.createRelationship({
       modelId: input.modelId,
-      type: input.relationshipType,
+      type: relType,
       sourceElementId: input.sourceElementId,
       targetElementId: input.targetElementId,
       name: input.name ?? "",
