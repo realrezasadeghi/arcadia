@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Users, Loader2 } from "lucide-react";
+import { ArrowRight, Users, Loader2, GitMerge } from "lucide-react";
 import { Badge } from "@/presentation/components/ui/badge";
 import { Button } from "@/presentation/components/ui/button";
 import { LayerCard } from "./layer-card";
@@ -47,7 +47,15 @@ export function ProjectDetailView({ projectId }: ProjectDetailViewProps) {
         </Button>
 
         <div className="flex-1 min-w-0">
-          <h1 className="text-2xl font-bold truncate">{project.name.value}</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold truncate">{project.name.value}</h1>
+            <Button variant="outline" size="sm" className="h-8 gap-1.5 shrink-0" asChild>
+              <Link href={`/project/${projectId}/traces`}>
+                <GitMerge className="h-3.5 w-3.5" />
+                ماتریس Trace
+              </Link>
+            </Button>
+          </div>
           {project.description && (
             <p className="mt-1 text-sm text-muted-foreground">{project.description}</p>
           )}
