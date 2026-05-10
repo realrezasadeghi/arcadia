@@ -15,7 +15,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { container } from "@/infrastructure/api/service-container";
 import { MODEL_KEYS } from "@/presentation/hooks/use-models";
 import { useElementTraces, useDeleteTraceLink } from "@/presentation/hooks/use-trace-links";
-import { toast } from "@/presentation/stores/toast.store";
+import { toast } from "sonner";
 import type { ElementStatus } from "@/domain/entities/element.entity";
 import { CreateTraceDialog } from "@/presentation/components/traceability/create-trace-dialog";
 import type { ElementTypeValue } from "@/domain/value-objects/element-type.vo";
@@ -96,7 +96,7 @@ function NodeProperties({
       onUpdate(node.id, { status: newStatus });
       qc.invalidateQueries({ queryKey: MODEL_KEYS.elements(node.data.modelId) });
       const label = newStatus === "VALIDATED" ? "اعتبارسنجی شد" : newStatus === "DEPRECATED" ? "منسوخ شد" : "به پیش‌نویس برگشت";
-      toast.success(label, node.data.name);
+      toast.success(label, { description: node.data.name });
     },
     onError: () => toast.error("خطا در تغییر وضعیت"),
   });

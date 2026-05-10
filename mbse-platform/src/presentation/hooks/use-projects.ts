@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { container } from "@/infrastructure/api/service-container";
-import { toast } from "@/presentation/stores/toast.store";
+import { toast } from "sonner";
 import type { ProjectRole } from "@/domain/entities/project.entity";
 
 export const PROJECT_KEYS = {
@@ -32,7 +32,7 @@ export function useCreateProject() {
       container.createProject.execute(input),
     onSuccess: (p) => {
       qc.invalidateQueries({ queryKey: PROJECT_KEYS.all() });
-      toast.success("پروژه ایجاد شد", p.name.value);
+      toast.success("پروژه ایجاد شد", { description: p.name.value });
     },
     onError: () => toast.error("خطا در ایجاد پروژه"),
   });
@@ -75,7 +75,7 @@ export function useAddMember() {
       qc.invalidateQueries({ queryKey: PROJECT_KEYS.detail(projectId) });
       toast.success("عضو اضافه شد");
     },
-    onError: (e: Error) => toast.error("خطا در افزودن عضو", e.message),
+    onError: (e: Error) => toast.error("خطا در افزودن عضو", { description: e.message }),
   });
 }
 
@@ -88,7 +88,7 @@ export function useChangeMemberRole() {
       qc.invalidateQueries({ queryKey: PROJECT_KEYS.detail(projectId) });
       toast.success("نقش عضو تغییر کرد");
     },
-    onError: (e: Error) => toast.error("خطا در تغییر نقش", e.message),
+    onError: (e: Error) => toast.error("خطا در تغییر نقش", { description: e.message }),
   });
 }
 
@@ -101,6 +101,6 @@ export function useRemoveMember() {
       qc.invalidateQueries({ queryKey: PROJECT_KEYS.detail(projectId) });
       toast.success("عضو حذف شد");
     },
-    onError: (e: Error) => toast.error("خطا در حذف عضو", e.message),
+    onError: (e: Error) => toast.error("خطا در حذف عضو", { description: e.message }),
   });
 }

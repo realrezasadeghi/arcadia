@@ -1,6 +1,6 @@
 import { AppHeader } from "@/presentation/components/layout/app-header";
 import { TooltipProvider } from "@/presentation/components/ui/tooltip";
-import { ToastContainer } from "@/presentation/components/ui/toast-container";
+import { Toaster } from "@/presentation/components/ui/sonner";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -11,7 +11,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {children}
         </main>
       </div>
-      <ToastContainer />
+      <Toaster />
     </TooltipProvider>
   );
 }

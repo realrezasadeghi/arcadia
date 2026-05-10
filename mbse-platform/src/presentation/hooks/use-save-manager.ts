@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { useUIStore } from "@/presentation/stores/ui.store";
 import { container } from "@/infrastructure/api/service-container";
 import { useCanvasStore } from "@/presentation/stores/canvas.store";
-import { toast } from "@/presentation/stores/toast.store";
+import { toast } from "sonner";
 
 const DEBOUNCE_MS = 2000;
 const MAX_PENDING = 5;
