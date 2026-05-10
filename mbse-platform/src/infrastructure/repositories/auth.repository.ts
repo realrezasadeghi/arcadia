@@ -1,59 +1,56 @@
 import type { IAuthRepository } from "@/domain/ports/auth.repository.port";
-import type {
-  User,
-  AuthTokens,
-  LoginInput,
-  RegisterInput,
-} from "@/domain/entities/user.entity";
+import { User, type AuthTokens } from "@/domain/entities/user.entity";
 import { httpClient } from "../http/http-client";
 
+interface UserRaw {
+  id: string; email: string; name: string;
+  avatarUrl?: string | null; createdAt: string;
+}
+
+interface AuthResponseRaw {
+  user: UserRaw;
+  tokens: AuthTokens;
+}
+
+function persistTokens(tokens: AuthTokens): void {
+  if (typeof window === "undefined") return;
+  localStorage.setItem("access_token", tokens.accessToken);
+  localStorage.setItem("refresh_token", tokens.refreshToken);
+}
+
+function clearTokens(): void {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem("access_token");
+  localStorage.removeItem("refresh_token");
+}
+
 export class AuthRepository implements IAuthRepository {
-  async login(
-    input: LoginInput
-  ): Promise<{ user: User; tokens: AuthTokens }> {
-    const response = await httpClient.post<{
-      user: User;
-      tokens: AuthTokens;
-    }>("/auth/login", input);
-
-    if (typeof window !== "undefined") {
-      localStorage.setItem("access_token", response.tokens.accessToken);
-      localStorage.setItem("refresh_token", response.tokens.refreshToken);
-    }
-
-    return response;
+  async login(input: { email: string; password: string }): Promise<{ user: User; tokens: AuthTokens }> {
+    const raw = await httpClient.post<AuthResponseRaw>("/auth/login", input);
+    persistTokens(raw.tokens);
+    return { user: User.reconstitute(raw.user), tokens: raw.tokens };
   }
 
-  async register(
-    input: RegisterInput
-  ): Promise<{ user: User; tokens: AuthTokens }> {
-    const response = await httpClient.post<{
-      user: User;
-      tokens: AuthTokens;
-    }>("/auth/register", input);
-
-    if (typeof window !== "undefined") {
-      localStorage.setItem("access_token", response.tokens.accessToken);
-      localStorage.setItem("refresh_token", response.tokens.refreshToken);
-    }
-
-    return response;
+  async register(input: { name: string; email: string; password: string }): Promise<{ user: User; tokens: AuthTokens }> {
+    const raw = await httpClient.post<AuthResponseRaw>("/auth/register", input);
+    persistTokens(raw.tokens);
+    return { user: User.reconstitute(raw.user), tokens: raw.tokens };
   }
 
   async logout(): Promise<void> {
     await httpClient.post("/auth/logout");
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("access_token");
-      localStorage.removeItem("refresh_token");
-    }
+    clearTokens();
   }
 
   async refreshToken(token: string): Promise<AuthTokens> {
-    return httpClient.post<AuthTokens>("/auth/refresh", { refreshToken: token });
+    const tokens = await httpClient.post<AuthTokens>("/auth/refresh", { refreshToken: token });
+    persistTokens(tokens);
+    return tokens;
   }
 
   async getCurrentUser(): Promise<User> {
-    return httpClient.get<User>("/auth/me");
+    const raw = await httpClient.get<UserRaw>("/auth/me");
+    return User.reconstitute(raw);
   }
 }
 
