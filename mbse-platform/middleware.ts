@@ -12,13 +12,16 @@ import type { NextRequest } from "next/server";
  * این cookie هنگام login در http-client تنظیم می‌شود.
  */
 
-const PUBLIC_PATHS = ["/login", "/register"];
+const PUBLIC_PREFIXES = ["/login", "/register"];
+const PUBLIC_EXACT    = ["/"];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // مسیرهای public — همیشه مجاز
-  const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p));
+  // مسیرهای public — exact match یا prefix match
+  const isPublic =
+    PUBLIC_EXACT.includes(pathname) ||
+    PUBLIC_PREFIXES.some((p) => pathname.startsWith(p));
   if (isPublic) return NextResponse.next();
 
   // static assets و api routes — رد شوند
