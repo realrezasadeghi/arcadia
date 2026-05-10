@@ -1,11 +1,11 @@
 import type { IDiagramRepository, CreateDiagramDTO, UpdateDiagramLayoutDTO } from "@/domain/ports/diagram.repository.port";
 import { Diagram } from "@/domain/entities/diagram.entity";
-import { diagrams, nextId } from "./mock-store";
+import { diagrams, nextId } from "./in-memory-store";
 import { EntityNotFoundError } from "@/domain/errors/domain.error";
 
 function delay(ms = 100): Promise<void> { return new Promise((r) => setTimeout(r, ms)); }
 
-export class MockDiagramRepository implements IDiagramRepository {
+export class InMemoryDiagramRepository implements IDiagramRepository {
   async findByModel(modelId: string): Promise<Diagram[]> {
     await delay();
     return [...diagrams.values()].filter((d) => d.modelId === modelId);

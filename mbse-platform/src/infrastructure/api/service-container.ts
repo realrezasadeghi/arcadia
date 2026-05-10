@@ -1,63 +1,63 @@
 /**
  * Service Container — Composition Root
  *
- * بر اساس NEXT_PUBLIC_MOCK_API:
- *   "true"  → Mock repositories (in-memory, بدون backend)
- *   غیر از آن → Real repositories (HTTP calls به backend)
+ * از Strategy Pattern استفاده می‌کند:
+ *   NEXT_PUBLIC_MOCK_API=true  → InMemoryBackendStrategy (بدون سرور)
+ *   NEXT_PUBLIC_MOCK_API=false → RealBackendStrategy (HTTP calls)
  *
- * برای swap کردن backend کافی است این env را تغییر دهید.
+ * برای افزودن backend جدید (مثلاً IndexedDB یا GraphQL):
+ *   1. کلاسی بساز که BackendStrategy را extend کند
+ *   2. همین فایل را آپدیت کن
+ *   بدون تغییر در Use Cases یا Domain.
  */
 
-const USE_MOCK = process.env.NEXT_PUBLIC_MOCK_API === "true";
+import type { BackendStrategy } from "../strategies/backend.strategy";
+import { InMemoryBackendStrategy } from "../strategies/in-memory-backend.strategy";
+import { RealBackendStrategy }     from "../strategies/real-backend.strategy";
 
-// ─── Real Repositories ────────────────────────────────────────────────────────
-import { projectRepository }   from "../repositories/project.repository";
-import { modelRepository }     from "../repositories/model.repository";
-import { diagramRepository }   from "../repositories/diagram.repository";
-import { traceLinkRepository } from "../repositories/trace-link.repository";
-import { authRepository }      from "../repositories/auth.repository";
+import { GetProjectsUseCase }     from "@/application/use-cases/project/get-projects.use-case";
+import { CreateProjectUseCase }   from "@/application/use-cases/project/create-project.use-case";
+import { UpdateProjectUseCase }   from "@/application/use-cases/project/update-project.use-case";
+import { DeleteProjectUseCase }   from "@/application/use-cases/project/delete-project.use-case";
+import { CreateElementUseCase }   from "@/application/use-cases/model/create-element.use-case";
+import { ConnectElementsUseCase } from "@/application/use-cases/model/connect-elements.use-case";
+import { CreateDiagramUseCase }   from "@/application/use-cases/diagram/create-diagram.use-case";
+import { CreateTraceLinkUseCase } from "@/application/use-cases/traceability/create-trace-link.use-case";
 
-// ─── Mock Repositories ───────────────────────────────────────────────────────
-import { MockAuthRepository }      from "../mock/mock-auth.repository";
-import { MockProjectRepository }   from "../mock/mock-project.repository";
-import { MockModelRepository }     from "../mock/mock-model.repository";
-import { MockDiagramRepository }   from "../mock/mock-diagram.repository";
-import { MockTraceLinkRepository } from "../mock/mock-trace-link.repository";
+function resolveStrategy(): BackendStrategy {
+  if (process.env.NEXT_PUBLIC_MOCK_API === "true") {
+    return new InMemoryBackendStrategy();
+  }
+  return new RealBackendStrategy();
+}
 
-// ─── Use Cases ───────────────────────────────────────────────────────────────
-import { GetProjectsUseCase }       from "@/application/use-cases/project/get-projects.use-case";
-import { CreateProjectUseCase }     from "@/application/use-cases/project/create-project.use-case";
-import { UpdateProjectUseCase }     from "@/application/use-cases/project/update-project.use-case";
-import { DeleteProjectUseCase }     from "@/application/use-cases/project/delete-project.use-case";
-import { CreateElementUseCase }     from "@/application/use-cases/model/create-element.use-case";
-import { ConnectElementsUseCase }   from "@/application/use-cases/model/connect-elements.use-case";
-import { CreateDiagramUseCase }     from "@/application/use-cases/diagram/create-diagram.use-case";
-import { CreateTraceLinkUseCase }   from "@/application/use-cases/traceability/create-trace-link.use-case";
+const strategy = resolveStrategy();
+const repos = strategy.build();
 
-const repos = USE_MOCK
-  ? {
-      project:   new MockProjectRepository(),
-      model:     new MockModelRepository(),
-      diagram:   new MockDiagramRepository(),
-      traceLink: new MockTraceLinkRepository(),
-      auth:      new MockAuthRepository(),
-    }
-  : {
-      project:   projectRepository,
-      model:     modelRepository,
-      diagram:   diagramRepository,
-      traceLink: traceLinkRepository,
-      auth:      authRepository,
-    };
+if (typeof window !== "undefined") {
+  console.info(`[Container] Backend strategy: ${strategy.name}`);
+}
 
 export const container = {
+  // ─── Project ───────────────────────────────────────────────────────────────
   getProjects:    new GetProjectsUseCase(repos.project),
   createProject:  new CreateProjectUseCase(repos.project),
   updateProject:  new UpdateProjectUseCase(repos.project),
   deleteProject:  new DeleteProjectUseCase(repos.project),
-  createElement:  new CreateElementUseCase(repos.model),
+
+  // ─── Model ─────────────────────────────────────────────────────────────────
+  createElement:   new CreateElementUseCase(repos.model),
   connectElements: new ConnectElementsUseCase(repos.model),
-  createDiagram:  new CreateDiagramUseCase(repos.diagram, repos.model),
+
+  // ─── Diagram ───────────────────────────────────────────────────────────────
+  createDiagram: new CreateDiagramUseCase(repos.diagram, repos.model),
+
+  // ─── Traceability ──────────────────────────────────────────────────────────
   createTraceLink: new CreateTraceLinkUseCase(repos.traceLink, repos.model),
+
+  // ─── Raw repositories (برای React Query hooks) ────────────────────────────
   repos,
 } as const;
+
+/** خواندن مستقیم strategy برای debug */
+export { strategy as activeStrategy };

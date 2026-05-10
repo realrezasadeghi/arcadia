@@ -2,12 +2,12 @@ import type { IAuthRepository } from "@/domain/ports/auth.repository.port";
 import type { AuthTokens } from "@/domain/entities/user.entity";
 import { User } from "@/domain/entities/user.entity";
 import { persistTokens, clearAuthCookies } from "@/lib/cookies";
-import { users, DEMO_USER, DEMO_PASSWORD, nextId } from "./mock-store";
+import { users, DEMO_USER, DEMO_PASSWORD, nextId } from "./in-memory-store";
 
 const MOCK_ACCESS = "mock-access-token";
 const MOCK_REFRESH = "mock-refresh-token";
 
-export class MockAuthRepository implements IAuthRepository {
+export class InMemoryAuthRepository implements IAuthRepository {
   async login({ email, password }: { email: string; password: string }): Promise<{ user: User; tokens: AuthTokens }> {
     await delay();
     const user = [...users.values()].find((u) => u.email.value === email.toLowerCase());

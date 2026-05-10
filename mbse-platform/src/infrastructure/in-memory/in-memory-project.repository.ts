@@ -1,12 +1,12 @@
 import type { IProjectRepository } from "@/domain/ports/project.repository.port";
 import type { ProjectRole } from "@/domain/entities/project.entity";
 import { Project } from "@/domain/entities/project.entity";
-import { projects, nextId, DEMO_USER } from "./mock-store";
+import { projects, nextId, DEMO_USER } from "./in-memory-store";
 import { EntityNotFoundError } from "@/domain/errors/domain.error";
 
 function delay(ms = 120): Promise<void> { return new Promise((r) => setTimeout(r, ms)); }
 
-export class MockProjectRepository implements IProjectRepository {
+export class InMemoryProjectRepository implements IProjectRepository {
   async findAll(): Promise<Project[]> {
     await delay();
     return [...projects.values()];

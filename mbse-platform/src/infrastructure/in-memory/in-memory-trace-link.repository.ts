@@ -1,11 +1,11 @@
 import type { ITraceLinkRepository, CreateTraceLinkDTO } from "@/domain/ports/trace-link.repository.port";
 import { TraceLink } from "@/domain/entities/trace-link.entity";
-import { traceLinks, nextId } from "./mock-store";
+import { traceLinks, nextId } from "./in-memory-store";
 import { EntityNotFoundError } from "@/domain/errors/domain.error";
 
 function delay(ms = 100): Promise<void> { return new Promise((r) => setTimeout(r, ms)); }
 
-export class MockTraceLinkRepository implements ITraceLinkRepository {
+export class InMemoryTraceLinkRepository implements ITraceLinkRepository {
   async findByProject(projectId: string): Promise<TraceLink[]> {
     await delay();
     return [...traceLinks.values()].filter((t) => t.projectId === projectId);

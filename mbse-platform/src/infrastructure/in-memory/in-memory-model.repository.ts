@@ -4,13 +4,13 @@ import { ModelElement } from "@/domain/entities/element.entity";
 import { Relationship } from "@/domain/entities/relationship.entity";
 import { ElementType } from "@/domain/value-objects/element-type.vo";
 import { Layer } from "@/domain/value-objects/layer.vo";
-import { models, elements, relationships, nextId } from "./mock-store";
+import { models, elements, relationships, nextId } from "./in-memory-store";
 import { EntityNotFoundError } from "@/domain/errors/domain.error";
 import type { ElementStatus } from "@/domain/entities/element.entity";
 
 function delay(ms = 100): Promise<void> { return new Promise((r) => setTimeout(r, ms)); }
 
-export class MockModelRepository implements IModelRepository {
+export class InMemoryModelRepository implements IModelRepository {
   // ─── Models ──────────────────────────────────────────────────────────────
   async findModelsByProject(projectId: string): Promise<ArchitectureModel[]> {
     await delay();
