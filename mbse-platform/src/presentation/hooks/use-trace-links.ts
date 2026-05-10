@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { container } from "@/infrastructure/api/service-container";
 
 export const TRACE_KEYS = {
@@ -40,7 +41,9 @@ export function useCreateTraceLink() {
       qc.invalidateQueries({ queryKey: TRACE_KEYS.byProject(result.projectId) });
       qc.invalidateQueries({ queryKey: TRACE_KEYS.byElement(result.sourceElementId) });
       qc.invalidateQueries({ queryKey: TRACE_KEYS.byElement(result.targetElementId) });
+      toast.success("Trace Link ایجاد شد");
     },
+    onError: (e: Error) => toast.error("خطا در ایجاد Trace Link", { description: e.message }),
   });
 }
 
@@ -53,6 +56,8 @@ export function useDeleteTraceLink() {
       qc.invalidateQueries({ queryKey: TRACE_KEYS.byProject(projectId) });
       qc.invalidateQueries({ queryKey: TRACE_KEYS.byElement(sourceElementId) });
       qc.invalidateQueries({ queryKey: TRACE_KEYS.byElement(targetElementId) });
+      toast.success("Trace Link حذف شد");
     },
+    onError: () => toast.error("خطا در حذف Trace Link"),
   });
 }

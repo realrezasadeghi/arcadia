@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { LoginForm } from "@/presentation/components/auth/login-form";
 import { ThemeToggle } from "@/presentation/components/shared/theme-toggle";
 
@@ -7,7 +8,9 @@ export default function LoginPage() {
       <div className="absolute top-4 left-4">
         <ThemeToggle />
       </div>
-      <LoginForm />
+      <Suspense>
+        <LoginForm />
+      </Suspense>
     </div>
   );
 }

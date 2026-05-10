@@ -1,6 +1,6 @@
 import type { IAuthRepository } from "@/domain/ports/auth.repository.port";
 import { User, type AuthTokens } from "@/domain/entities/user.entity";
-import { httpClient } from "../http/http-client";
+import { httpClient, persistTokens, clearTokens } from "../http/http-client";
 
 interface UserRaw {
   id: string; email: string; name: string;
@@ -9,43 +9,36 @@ interface UserRaw {
 
 interface AuthResponseRaw {
   user: UserRaw;
-  tokens: AuthTokens;
-}
-
-function persistTokens(tokens: AuthTokens): void {
-  if (typeof window === "undefined") return;
-  localStorage.setItem("access_token", tokens.accessToken);
-  localStorage.setItem("refresh_token", tokens.refreshToken);
-}
-
-function clearTokens(): void {
-  if (typeof window === "undefined") return;
-  localStorage.removeItem("access_token");
-  localStorage.removeItem("refresh_token");
+  tokens: { accessToken: string; refreshToken: string };
 }
 
 export class AuthRepository implements IAuthRepository {
   async login(input: { email: string; password: string }): Promise<{ user: User; tokens: AuthTokens }> {
     const raw = await httpClient.post<AuthResponseRaw>("/auth/login", input);
-    persistTokens(raw.tokens);
-    return { user: User.reconstitute(raw.user), tokens: raw.tokens };
+    persistTokens(raw.tokens.accessToken, raw.tokens.refreshToken);
+    const tokens: AuthTokens = { accessToken: raw.tokens.accessToken, refreshToken: raw.tokens.refreshToken };
+    return { user: User.reconstitute(raw.user), tokens };
   }
 
   async register(input: { name: string; email: string; password: string }): Promise<{ user: User; tokens: AuthTokens }> {
     const raw = await httpClient.post<AuthResponseRaw>("/auth/register", input);
-    persistTokens(raw.tokens);
-    return { user: User.reconstitute(raw.user), tokens: raw.tokens };
+    persistTokens(raw.tokens.accessToken, raw.tokens.refreshToken);
+    const tokens: AuthTokens = { accessToken: raw.tokens.accessToken, refreshToken: raw.tokens.refreshToken };
+    return { user: User.reconstitute(raw.user), tokens };
   }
 
   async logout(): Promise<void> {
-    await httpClient.post("/auth/logout");
-    clearTokens();
+    try {
+      await httpClient.post("/auth/logout");
+    } finally {
+      clearTokens();
+    }
   }
 
   async refreshToken(token: string): Promise<AuthTokens> {
-    const tokens = await httpClient.post<AuthTokens>("/auth/refresh", { refreshToken: token });
-    persistTokens(tokens);
-    return tokens;
+    const raw = await httpClient.post<{ accessToken: string; refreshToken: string }>("/auth/refresh", { refreshToken: token });
+    persistTokens(raw.accessToken, raw.refreshToken);
+    return { accessToken: raw.accessToken, refreshToken: raw.refreshToken };
   }
 
   async getCurrentUser(): Promise<User> {
