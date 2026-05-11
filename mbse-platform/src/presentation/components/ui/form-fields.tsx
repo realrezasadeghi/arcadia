@@ -130,16 +130,16 @@ export function FieldTextarea<T extends FieldValues>({
     <FormField
       control={control}
       name={name}
-      render={({ field, fieldState }) => (
+      render={({ field }) => (
         <FormItem className={className}>
           {label && <FormLabel>{label}</FormLabel>}
           <FormControl>
             <textarea
               className={cn(
                 "min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-none",
-                "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-                "placeholder:text-muted-foreground disabled:opacity-50",
-                fieldState.error && "border-destructive focus-visible:ring-destructive"
+                "transition-all duration-150 placeholder:text-muted-foreground disabled:opacity-50",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:border-ring",
+                "aria-[invalid=true]:border-destructive aria-[invalid=true]:focus-visible:ring-destructive aria-[invalid=true]:focus-visible:border-destructive"
               )}
               {...textareaProps}
               {...field}

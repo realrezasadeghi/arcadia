@@ -5,7 +5,9 @@ import { LogIn } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/presentation/components/ui/card";
-import { FormBuilder, type FieldDef } from "@/presentation/components/ui/form-builder";
+import { Button } from "@/presentation/components/ui/button";
+import { Form } from "@/presentation/components/ui/form";
+import { FieldRenderer, type FieldDef } from "@/presentation/components/ui/field-renderer";
 import { useLogin } from "@/presentation/hooks/use-auth";
 import { loginSchema, type LoginFormValues } from "@/lib/schemas/auth.schema";
 
@@ -22,9 +24,9 @@ export function LoginForm() {
   });
 
   return (
-    <Card className="w-full max-w-sm">
+    <Card className="w-full max-w-sm card-accent">
       <CardHeader className="text-center">
-        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/20">
           <span className="text-2xl font-black text-primary">ن</span>
         </div>
         <CardTitle className="text-xl">ورود به نقطه</CardTitle>
@@ -33,18 +35,19 @@ export function LoginForm() {
 
       <CardContent>
         {login.error && (
-          <p className="mb-3 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          <p className="mb-3 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive border border-destructive/20">
             ایمیل یا رمز عبور اشتباه است
           </p>
         )}
-        <FormBuilder
-          form={form}
-          fields={fields}
-          onSubmit={(v) => login.mutate(v)}
-          submitLabel="ورود"
-          submitIcon={<LogIn className="h-4 w-4" />}
-          loading={login.isPending}
-        />
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit((v) => login.mutate(v))} className="flex flex-col gap-4">
+            <FieldRenderer form={form} fields={fields} />
+            <Button type="submit" loading={login.isPending} className="w-full gap-2 mt-1">
+              <LogIn className="h-4 w-4" />
+              ورود
+            </Button>
+          </form>
+        </Form>
       </CardContent>
 
       <CardFooter className="justify-center">
