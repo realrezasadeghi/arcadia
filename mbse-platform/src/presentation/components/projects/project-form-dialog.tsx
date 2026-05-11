@@ -3,15 +3,13 @@
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button } from "@/presentation/components/ui/button";
-import { Input } from "@/presentation/components/ui/input";
 import {
   Dialog, DialogContent, DialogHeader,
   DialogTitle, DialogFooter, DialogDescription,
 } from "@/presentation/components/ui/dialog";
-import {
-  Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
-} from "@/presentation/components/ui/form";
+import { Button } from "@/presentation/components/ui/button";
+import { Form } from "@/presentation/components/ui/form";
+import { FieldInput, FieldTextarea } from "@/presentation/components/ui/form-fields";
 import { useCreateProject, useUpdateProject } from "@/presentation/hooks/use-projects";
 import { projectFormSchema, type ProjectFormValues } from "@/lib/schemas/project.schema";
 import type { Project } from "@/domain/entities/project.entity";
@@ -43,16 +41,11 @@ export function ProjectFormDialog({ open, onClose, project }: ProjectFormDialogP
   }, [open, project, form]);
 
   function onSubmit(values: ProjectFormValues) {
+    const payload = { name: values.name, description: values.description ?? "" };
     if (isEdit && project) {
-      update.mutate(
-        { id: project.id, name: values.name, description: values.description ?? "" },
-        { onSuccess: onClose }
-      );
+      update.mutate({ id: project.id, ...payload }, { onSuccess: onClose });
     } else {
-      create.mutate(
-        { name: values.name, description: values.description ?? "" },
-        { onSuccess: onClose }
-      );
+      create.mutate(payload, { onSuccess: onClose });
     }
   }
 
@@ -68,36 +61,18 @@ export function ProjectFormDialog({ open, onClose, project }: ProjectFormDialogP
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4 py-2">
-            <FormField
+            <FieldInput
               control={form.control}
               name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>نام پروژه *</FormLabel>
-                  <FormControl>
-                    <Input placeholder="مثال: سیستم IFE هواپیما" autoFocus {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              label="نام پروژه *"
+              placeholder="مثال: سیستم IFE هواپیما"
+              autoFocus
             />
-
-            <FormField
+            <FieldTextarea
               control={form.control}
               name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>توضیحات</FormLabel>
-                  <FormControl>
-                    <textarea
-                      className="min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring placeholder:text-muted-foreground"
-                      placeholder="توضیح مختصری از هدف این پروژه..."
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              label="توضیحات"
+              placeholder="توضیح مختصری از هدف این پروژه..."
             />
 
             <DialogFooter>

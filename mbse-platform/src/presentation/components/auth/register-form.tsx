@@ -1,31 +1,26 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import { Eye, EyeOff, UserPlus } from "lucide-react";
+import { UserPlus } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button } from "@/presentation/components/ui/button";
-import { Input } from "@/presentation/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/presentation/components/ui/card";
-import {
-  Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
-} from "@/presentation/components/ui/form";
+import { FormBuilder, type FieldDef } from "@/presentation/components/ui/form-builder";
 import { useRegister } from "@/presentation/hooks/use-auth";
 import { registerSchema, type RegisterFormValues } from "@/lib/schemas/auth.schema";
 
-export function RegisterForm() {
-  const [showPassword, setShowPassword] = useState(false);
-  const register = useRegister();
+const fields: FieldDef[] = [
+  { name: "name",     label: "نام و نام خانوادگی", type: "text",     placeholder: "علی محمدی" },
+  { name: "email",    label: "ایمیل",               type: "email",    placeholder: "example@domain.com", dir: "ltr" },
+  { name: "password", label: "رمز عبور",             type: "password", placeholder: "حداقل ۶ کاراکتر" },
+];
 
+export function RegisterForm() {
+  const register = useRegister();
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: { name: "", email: "", password: "" },
   });
-
-  function onSubmit(values: RegisterFormValues) {
-    register.mutate(values);
-  }
 
   return (
     <Card className="w-full max-w-sm">
@@ -38,83 +33,19 @@ export function RegisterForm() {
       </CardHeader>
 
       <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>نام و نام خانوادگی</FormLabel>
-                  <FormControl>
-                    <Input placeholder="علی محمدی" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>ایمیل</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="email"
-                      placeholder="example@domain.com"
-                      dir="ltr"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>رمز عبور</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <Input
-                        type={showPassword ? "text" : "password"}
-                        placeholder="حداقل ۶ کاراکتر"
-                        className="pl-10"
-                        dir="ltr"
-                        {...field}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword((v) => !v)}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                        tabIndex={-1}
-                      >
-                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </button>
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {register.error && (
-              <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                خطا در ثبت‌نام. لطفاً دوباره تلاش کنید.
-              </p>
-            )}
-
-            <Button type="submit" loading={register.isPending} className="w-full gap-2">
-              <UserPlus className="h-4 w-4" />
-              ایجاد حساب
-            </Button>
-          </form>
-        </Form>
+        {register.error && (
+          <p className="mb-3 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            خطا در ثبت‌نام. لطفاً دوباره تلاش کنید.
+          </p>
+        )}
+        <FormBuilder
+          form={form}
+          fields={fields}
+          onSubmit={(v) => register.mutate(v)}
+          submitLabel="ایجاد حساب"
+          submitIcon={<UserPlus className="h-4 w-4" />}
+          loading={register.isPending}
+        />
       </CardContent>
 
       <CardFooter className="justify-center">

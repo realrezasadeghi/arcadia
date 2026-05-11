@@ -4,7 +4,6 @@ import { UserPlus, Trash2, Loader2, Crown } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/presentation/components/ui/button";
-import { Input } from "@/presentation/components/ui/input";
 import { Label } from "@/presentation/components/ui/label";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
@@ -13,15 +12,25 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/presentation/components/ui/select";
 import { Separator } from "@/presentation/components/ui/separator";
-import {
-  Form, FormControl, FormField, FormItem, FormMessage,
-} from "@/presentation/components/ui/form";
+import { Form } from "@/presentation/components/ui/form";
+import { FieldInput, FieldSelect } from "@/presentation/components/ui/form-fields";
 import {
   useAddMember, useRemoveMember, useChangeMemberRole,
 } from "@/presentation/hooks/use-projects";
 import { addMemberSchema, type AddMemberFormValues } from "@/lib/schemas/project.schema";
 import type { Project, ProjectRole } from "@/domain/entities/project.entity";
 import type { User } from "@/domain/entities/user.entity";
+
+const ROLE_LABELS: Record<ProjectRole, string> = {
+  OWNER: "مالک",
+  EDITOR: "ویرایشگر",
+  VIEWER: "بیننده",
+};
+
+const roleOptions = [
+  { value: "EDITOR", label: "ویرایشگر" },
+  { value: "VIEWER", label: "بیننده" },
+];
 
 interface ManageMembersDialogProps {
   open: boolean;
@@ -30,21 +39,13 @@ interface ManageMembersDialogProps {
   currentUser: User;
 }
 
-const ROLE_LABELS: Record<ProjectRole, string> = {
-  OWNER: "مالک",
-  EDITOR: "ویرایشگر",
-  VIEWER: "بیننده",
-};
-
 export function ManageMembersDialog({
   open, onOpenChange, project, currentUser,
 }: ManageMembersDialogProps) {
   const addMember = useAddMember();
   const removeMember = useRemoveMember();
   const changeRole = useChangeMemberRole();
-
   const isOwner = project.isOwner(currentUser.id);
-  const members = project.members;
 
   const form = useForm<AddMemberFormValues>({
     resolver: zodResolver(addMemberSchema),
@@ -68,9 +69,9 @@ export function ManageMembersDialog({
         <div className="flex flex-col gap-4">
           {/* Members list */}
           <div className="flex flex-col gap-1.5">
-            <Label className="text-xs">اعضای فعلی ({members.length})</Label>
+            <Label className="text-xs">اعضای فعلی ({project.members.length})</Label>
             <div className="flex flex-col divide-y divide-border rounded-md border overflow-hidden">
-              {members.map((member) => {
+              {project.members.map((member) => {
                 const isMe = member.userId === currentUser.id;
                 const isMemberOwner = member.role === "OWNER";
                 return (
@@ -114,7 +115,8 @@ export function ManageMembersDialog({
                           </SelectContent>
                         </Select>
                         <Button
-                          variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                          variant="ghost" size="icon"
+                          className="h-7 w-7 text-muted-foreground hover:text-destructive"
                           disabled={removeMember.isPending}
                           onClick={() => removeMember.mutate({ projectId: project.id, userId: member.userId })}
                         >
@@ -137,41 +139,18 @@ export function ManageMembersDialog({
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onAddMember)} className="flex flex-col gap-3">
                   <Label className="text-xs">افزودن عضو جدید</Label>
-                  <div className="flex gap-2">
-                    <FormField
+                  <div className="flex gap-2 items-start">
+                    <FieldInput
                       control={form.control}
                       name="userId"
-                      render={({ field }) => (
-                        <FormItem className="flex-1">
-                          <FormControl>
-                            <Input
-                              placeholder="شناسه کاربری..."
-                              className="h-8 text-sm"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                      placeholder="شناسه کاربری..."
+                      className="flex-1"
                     />
-                    <FormField
+                    <FieldSelect
                       control={form.control}
                       name="role"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormControl>
-                            <Select value={field.value} onValueChange={field.onChange}>
-                              <SelectTrigger className="h-8 w-[110px] text-xs">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="EDITOR">ویرایشگر</SelectItem>
-                                <SelectItem value="VIEWER">بیننده</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </FormControl>
-                        </FormItem>
-                      )}
+                      options={roleOptions}
+                      triggerClassName="h-9 w-[110px] text-xs"
                     />
                   </div>
                   <Button

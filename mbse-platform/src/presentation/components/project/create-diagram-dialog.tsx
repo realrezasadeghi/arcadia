@@ -8,10 +8,9 @@ import {
   DialogTitle, DialogFooter, DialogDescription,
 } from "@/presentation/components/ui/dialog";
 import { Button } from "@/presentation/components/ui/button";
-import { Input } from "@/presentation/components/ui/input";
-import {
-  Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
-} from "@/presentation/components/ui/form";
+import { Form } from "@/presentation/components/ui/form";
+import { FieldInput } from "@/presentation/components/ui/form-fields";
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/presentation/components/ui/form";
 import { cn } from "@/presentation/lib/utils";
 import { DiagramType } from "@/domain/value-objects/diagram-type.vo";
 import { Layer } from "@/domain/value-objects/layer.vo";
@@ -62,6 +61,7 @@ export function CreateDiagramDialog({ open, onClose, modelId, layer }: CreateDia
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4 py-2">
+            {/* Type selector — custom UI, use FormField directly */}
             <FormField
               control={form.control}
               name="type"
@@ -93,18 +93,12 @@ export function CreateDiagramDialog({ open, onClose, modelId, layer }: CreateDia
               )}
             />
 
-            <FormField
+            <FieldInput
               control={form.control}
               name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>نام دیاگرام</FormLabel>
-                  <FormControl>
-                    <Input placeholder="مثال: Context Diagram" autoFocus {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              label="نام دیاگرام"
+              placeholder="مثال: Context Diagram"
+              autoFocus
             />
 
             <DialogFooter>

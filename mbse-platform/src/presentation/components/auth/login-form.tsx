@@ -1,31 +1,25 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import { Eye, EyeOff, LogIn } from "lucide-react";
+import { LogIn } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button } from "@/presentation/components/ui/button";
-import { Input } from "@/presentation/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/presentation/components/ui/card";
-import {
-  Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
-} from "@/presentation/components/ui/form";
+import { FormBuilder, type FieldDef } from "@/presentation/components/ui/form-builder";
 import { useLogin } from "@/presentation/hooks/use-auth";
 import { loginSchema, type LoginFormValues } from "@/lib/schemas/auth.schema";
 
-export function LoginForm() {
-  const [showPassword, setShowPassword] = useState(false);
-  const login = useLogin();
+const fields: FieldDef[] = [
+  { name: "email",    label: "ایمیل",    type: "email",    placeholder: "example@domain.com", dir: "ltr" },
+  { name: "password", label: "رمز عبور", type: "password" },
+];
 
+export function LoginForm() {
+  const login = useLogin();
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: "", password: "" },
   });
-
-  function onSubmit(values: LoginFormValues) {
-    login.mutate(values);
-  }
 
   return (
     <Card className="w-full max-w-sm">
@@ -38,69 +32,19 @@ export function LoginForm() {
       </CardHeader>
 
       <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4">
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>ایمیل</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="email"
-                      placeholder="example@domain.com"
-                      dir="ltr"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>رمز عبور</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <Input
-                        type={showPassword ? "text" : "password"}
-                        placeholder="••••••••"
-                        className="pl-10"
-                        dir="ltr"
-                        {...field}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword((v) => !v)}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                        tabIndex={-1}
-                      >
-                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </button>
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {login.error && (
-              <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                ایمیل یا رمز عبور اشتباه است
-              </p>
-            )}
-
-            <Button type="submit" loading={login.isPending} className="w-full gap-2">
-              <LogIn className="h-4 w-4" />
-              ورود
-            </Button>
-          </form>
-        </Form>
+        {login.error && (
+          <p className="mb-3 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            ایمیل یا رمز عبور اشتباه است
+          </p>
+        )}
+        <FormBuilder
+          form={form}
+          fields={fields}
+          onSubmit={(v) => login.mutate(v)}
+          submitLabel="ورود"
+          submitIcon={<LogIn className="h-4 w-4" />}
+          loading={login.isPending}
+        />
       </CardContent>
 
       <CardFooter className="justify-center">
