@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import { UserPlus, Trash2, Loader2, Crown } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/presentation/components/ui/button";
 import { Input } from "@/presentation/components/ui/input";
 import { Label } from "@/presentation/components/ui/label";
@@ -13,8 +14,12 @@ import {
 } from "@/presentation/components/ui/select";
 import { Separator } from "@/presentation/components/ui/separator";
 import {
+  Form, FormControl, FormField, FormItem, FormMessage,
+} from "@/presentation/components/ui/form";
+import {
   useAddMember, useRemoveMember, useChangeMemberRole,
 } from "@/presentation/hooks/use-projects";
+import { addMemberSchema, type AddMemberFormValues } from "@/lib/schemas/project.schema";
 import type { Project, ProjectRole } from "@/domain/entities/project.entity";
 import type { User } from "@/domain/entities/user.entity";
 
@@ -34,9 +39,6 @@ const ROLE_LABELS: Record<ProjectRole, string> = {
 export function ManageMembersDialog({
   open, onOpenChange, project, currentUser,
 }: ManageMembersDialogProps) {
-  const [newUserId, setNewUserId] = useState("");
-  const [newRole, setNewRole] = useState<Exclude<ProjectRole, "OWNER">>("EDITOR");
-
   const addMember = useAddMember();
   const removeMember = useRemoveMember();
   const changeRole = useChangeMemberRole();
@@ -44,11 +46,15 @@ export function ManageMembersDialog({
   const isOwner = project.isOwner(currentUser.id);
   const members = project.members;
 
-  function handleAdd() {
-    if (!newUserId.trim()) return;
+  const form = useForm<AddMemberFormValues>({
+    resolver: zodResolver(addMemberSchema),
+    defaultValues: { userId: "", role: "EDITOR" },
+  });
+
+  function onAddMember(values: AddMemberFormValues) {
     addMember.mutate(
-      { projectId: project.id, userId: newUserId.trim(), role: newRole },
-      { onSuccess: () => setNewUserId("") },
+      { projectId: project.id, userId: values.userId, role: values.role },
+      { onSuccess: () => form.reset() },
     );
   }
 
@@ -128,38 +134,60 @@ export function ManageMembersDialog({
           {isOwner && (
             <>
               <Separator />
-              <div className="flex flex-col gap-3">
-                <Label className="text-xs">افزودن عضو جدید</Label>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="شناسه کاربری..."
-                    value={newUserId}
-                    onChange={(e) => setNewUserId(e.target.value)}
-                    className="h-8 text-sm flex-1"
-                    onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-                  />
-                  <Select value={newRole} onValueChange={(v) => setNewRole(v as Exclude<ProjectRole, "OWNER">)}>
-                    <SelectTrigger className="h-8 w-[110px] text-xs">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="EDITOR">ویرایشگر</SelectItem>
-                      <SelectItem value="VIEWER">بیننده</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button
-                  size="sm" className="gap-1.5 self-start h-8"
-                  onClick={handleAdd}
-                  disabled={!newUserId.trim() || addMember.isPending}
-                >
-                  {addMember.isPending
-                    ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    : <UserPlus className="h-3.5 w-3.5" />
-                  }
-                  افزودن عضو
-                </Button>
-              </div>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onAddMember)} className="flex flex-col gap-3">
+                  <Label className="text-xs">افزودن عضو جدید</Label>
+                  <div className="flex gap-2">
+                    <FormField
+                      control={form.control}
+                      name="userId"
+                      render={({ field }) => (
+                        <FormItem className="flex-1">
+                          <FormControl>
+                            <Input
+                              placeholder="شناسه کاربری..."
+                              className="h-8 text-sm"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="role"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Select value={field.value} onValueChange={field.onChange}>
+                              <SelectTrigger className="h-8 w-[110px] text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="EDITOR">ویرایشگر</SelectItem>
+                                <SelectItem value="VIEWER">بیننده</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    size="sm"
+                    className="gap-1.5 self-start h-8"
+                    disabled={addMember.isPending}
+                  >
+                    {addMember.isPending
+                      ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      : <UserPlus className="h-3.5 w-3.5" />
+                    }
+                    افزودن عضو
+                  </Button>
+                </form>
+              </Form>
             </>
           )}
         </div>
