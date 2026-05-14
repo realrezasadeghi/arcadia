@@ -12,7 +12,7 @@ export const TRACE_KEYS = {
 export function useTraceLinks(projectId: string) {
   return useQuery({
     queryKey: TRACE_KEYS.byProject(projectId),
-    queryFn: () => container.repos.traceLink.findByProject(projectId),
+    queryFn: () => container.getTraceLinksByProject.execute({ projectId }),
     enabled: !!projectId,
   });
 }
@@ -20,7 +20,7 @@ export function useTraceLinks(projectId: string) {
 export function useElementTraces(elementId: string) {
   return useQuery({
     queryKey: TRACE_KEYS.byElement(elementId),
-    queryFn: () => container.repos.traceLink.findByElement(elementId),
+    queryFn: () => container.getTraceLinksByElement.execute({ elementId }),
     enabled: !!elementId,
   });
 }
@@ -44,6 +44,21 @@ export function useCreateTraceLink() {
       toast.success("Trace Link ایجاد شد");
     },
     onError: (e: Error) => toast.error("خطا در ایجاد Trace Link", { description: e.message }),
+  });
+}
+
+export function useUpdateTraceLinkDescription() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, description, projectId }: { id: string; description: string; projectId: string }) =>
+      container.updateTraceLinkDescription.execute({ id, description }),
+    onSuccess: (result, { projectId }) => {
+      qc.invalidateQueries({ queryKey: TRACE_KEYS.byProject(projectId) });
+      qc.invalidateQueries({ queryKey: TRACE_KEYS.byElement(result.sourceElementId) });
+      qc.invalidateQueries({ queryKey: TRACE_KEYS.byElement(result.targetElementId) });
+      toast.success("توضیحات به‌روزرسانی شد");
+    },
+    onError: (e: Error) => toast.error("خطا در به‌روزرسانی Trace Link", { description: e.message }),
   });
 }
 

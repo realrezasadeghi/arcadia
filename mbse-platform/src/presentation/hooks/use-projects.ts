@@ -21,7 +21,7 @@ export function useProjects() {
 export function useProject(id: string) {
   return useQuery({
     queryKey: PROJECT_KEYS.detail(id),
-    queryFn: () => container.repos.project.findById(id),
+    queryFn: () => container.getProject.execute({ projectId: id }),
     enabled: !!id,
   });
 }

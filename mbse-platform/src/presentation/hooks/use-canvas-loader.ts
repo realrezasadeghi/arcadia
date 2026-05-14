@@ -4,6 +4,8 @@ import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useCanvasStore, type CanvasEdge, type CanvasNode } from "@/presentation/stores/canvas.store";
 import { container } from "@/infrastructure/api/service-container";
+import { DIAGRAM_KEYS } from "./use-diagrams";
+import { MODEL_KEYS } from "./use-models";
 import type { ElementTypeValue } from "@/domain/value-objects/element-type.vo";
 import type { RelationshipTypeValue } from "@/presentation/stores/canvas.store";
 
@@ -17,22 +19,22 @@ export function useCanvasLoader(diagramId: string) {
   const { initCanvas, reset } = useCanvasStore();
 
   const diagramQuery = useQuery({
-    queryKey: ["diagram", diagramId],
-    queryFn: () => container.repos.diagram.findById(diagramId),
+    queryKey: DIAGRAM_KEYS.detail(diagramId),
+    queryFn: () => container.getDiagram.execute({ diagramId }),
     enabled: !!diagramId,
   });
 
   const diagram = diagramQuery.data;
 
   const elementsQuery = useQuery({
-    queryKey: ["elements", diagram?.modelId],
-    queryFn: () => container.repos.model.findElementsByModel(diagram!.modelId),
+    queryKey: MODEL_KEYS.elements(diagram?.modelId ?? ""),
+    queryFn: () => container.getElementsByModel.execute({ modelId: diagram!.modelId }),
     enabled: !!diagram?.modelId,
   });
 
   const relationshipsQuery = useQuery({
-    queryKey: ["relationships", diagram?.modelId],
-    queryFn: () => container.repos.model.findRelationshipsByModel(diagram!.modelId),
+    queryKey: MODEL_KEYS.relationships(diagram?.modelId ?? ""),
+    queryFn: () => container.getRelationshipsByModel.execute({ modelId: diagram!.modelId }),
     enabled: !!diagram?.modelId,
   });
 

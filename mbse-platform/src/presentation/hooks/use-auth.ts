@@ -11,7 +11,7 @@ export function useCurrentUser() {
   return useQuery({
     queryKey: ["auth", "me"],
     queryFn: async () => {
-      const user = await container.repos.auth.getCurrentUser();
+      const user = await container.getCurrentUser.execute();
       setUser(user);
       return user;
     },
