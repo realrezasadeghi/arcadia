@@ -38,7 +38,7 @@ export function useCreateModel() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: { projectId: string; layer: Layer; name: string; description?: string }) =>
-      container.repos.model.createModel(input),
+      container.createModel.execute(input),
     onSuccess: (_, { projectId }) =>
       qc.invalidateQueries({ queryKey: MODEL_KEYS.byProject(projectId) }),
   });

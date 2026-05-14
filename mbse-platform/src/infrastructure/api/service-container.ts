@@ -19,6 +19,7 @@ import { GetProjectsUseCase }     from "@/application/use-cases/project/get-proj
 import { CreateProjectUseCase }   from "@/application/use-cases/project/create-project.use-case";
 import { UpdateProjectUseCase }   from "@/application/use-cases/project/update-project.use-case";
 import { DeleteProjectUseCase }   from "@/application/use-cases/project/delete-project.use-case";
+import { CreateModelUseCase }     from "@/application/use-cases/model/create-model.use-case";
 import { CreateElementUseCase }   from "@/application/use-cases/model/create-element.use-case";
 import { ConnectElementsUseCase } from "@/application/use-cases/model/connect-elements.use-case";
 import { CreateDiagramUseCase }   from "@/application/use-cases/diagram/create-diagram.use-case";
@@ -46,6 +47,7 @@ export const container = {
   deleteProject:  new DeleteProjectUseCase(repos.project),
 
   // ─── Model ─────────────────────────────────────────────────────────────────
+  createModel:     new CreateModelUseCase(repos.model),
   createElement:   new CreateElementUseCase(repos.model),
   connectElements: new ConnectElementsUseCase(repos.model),
 
