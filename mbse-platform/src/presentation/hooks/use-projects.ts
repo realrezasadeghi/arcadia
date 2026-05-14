@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { container } from "@/infrastructure/api/service-container";
+import { useAuthStore } from "@/presentation/stores/auth.store";
 import { toast } from "sonner";
 import type { ProjectRole } from "@/domain/entities/project.entity";
 
@@ -68,9 +69,15 @@ export function useDeleteProject() {
 
 export function useAddMember() {
   const qc = useQueryClient();
+  const { user } = useAuthStore();
   return useMutation({
     mutationFn: ({ projectId, userId, role }: { projectId: string; userId: string; role: Exclude<ProjectRole, "OWNER"> }) =>
-      container.repos.project.addMember(projectId, userId, role),
+      container.addMember.execute({
+        projectId,
+        userId,
+        role,
+        requestingUserId: user?.id ?? "",
+      }),
     onSuccess: (_, { projectId }) => {
       qc.invalidateQueries({ queryKey: PROJECT_KEYS.detail(projectId) });
       toast.success("عضو اضافه شد");
@@ -81,9 +88,15 @@ export function useAddMember() {
 
 export function useChangeMemberRole() {
   const qc = useQueryClient();
+  const { user } = useAuthStore();
   return useMutation({
     mutationFn: ({ projectId, userId, role }: { projectId: string; userId: string; role: Exclude<ProjectRole, "OWNER"> }) =>
-      container.repos.project.changeMemberRole(projectId, userId, role),
+      container.changeMemberRole.execute({
+        projectId,
+        userId,
+        role,
+        requestingUserId: user?.id ?? "",
+      }),
     onSuccess: (_, { projectId }) => {
       qc.invalidateQueries({ queryKey: PROJECT_KEYS.detail(projectId) });
       toast.success("نقش عضو تغییر کرد");
@@ -94,9 +107,14 @@ export function useChangeMemberRole() {
 
 export function useRemoveMember() {
   const qc = useQueryClient();
+  const { user } = useAuthStore();
   return useMutation({
     mutationFn: ({ projectId, userId }: { projectId: string; userId: string }) =>
-      container.repos.project.removeMember(projectId, userId),
+      container.removeMember.execute({
+        projectId,
+        userId,
+        requestingUserId: user?.id ?? "",
+      }),
     onSuccess: (_, { projectId }) => {
       qc.invalidateQueries({ queryKey: PROJECT_KEYS.detail(projectId) });
       toast.success("عضو حذف شد");

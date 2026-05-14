@@ -80,7 +80,7 @@ function NodeProperties({
 
   const updateMutation = useMutation({
     mutationFn: ({ name, description }: { name: string; description: string }) =>
-      container.repos.model.updateElement(node.data.elementId, { name, description }),
+      container.updateElement.execute({ elementId: node.data.elementId, name, description }),
     onSuccess: (updated) => {
       onUpdate(node.id, { name: updated.name, description: updated.description });
       qc.invalidateQueries({ queryKey: MODEL_KEYS.elements(node.data.modelId) });
@@ -90,7 +90,7 @@ function NodeProperties({
 
   const statusMutation = useMutation({
     mutationFn: (status: ElementStatus) =>
-      container.repos.model.updateElement(node.data.elementId, { properties: { status } }),
+      container.updateElement.execute({ elementId: node.data.elementId, properties: { status } }),
     onSuccess: (updated) => {
       const newStatus = updated.status;
       onUpdate(node.id, { status: newStatus });

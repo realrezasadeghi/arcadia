@@ -51,13 +51,13 @@ export function useDeleteTraceLink() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id }: { id: string; projectId: string; sourceElementId: string; targetElementId: string }) =>
-      container.repos.traceLink.delete(id),
+      container.deleteTraceLink.execute({ id }),
     onSuccess: (_, { projectId, sourceElementId, targetElementId }) => {
       qc.invalidateQueries({ queryKey: TRACE_KEYS.byProject(projectId) });
       qc.invalidateQueries({ queryKey: TRACE_KEYS.byElement(sourceElementId) });
       qc.invalidateQueries({ queryKey: TRACE_KEYS.byElement(targetElementId) });
       toast.success("Trace Link حذف شد");
     },
-    onError: () => toast.error("خطا در حذف Trace Link"),
+    onError: (e: Error) => toast.error("خطا در حذف Trace Link", { description: e.message }),
   });
 }

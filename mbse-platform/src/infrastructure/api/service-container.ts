@@ -15,15 +15,24 @@ import type { BackendStrategy } from "../strategies/backend.strategy";
 import { InMemoryBackendStrategy } from "../strategies/in-memory-backend.strategy";
 import { RealBackendStrategy }     from "../strategies/real-backend.strategy";
 
-import { GetProjectsUseCase }     from "@/application/use-cases/project/get-projects.use-case";
-import { CreateProjectUseCase }   from "@/application/use-cases/project/create-project.use-case";
-import { UpdateProjectUseCase }   from "@/application/use-cases/project/update-project.use-case";
-import { DeleteProjectUseCase }   from "@/application/use-cases/project/delete-project.use-case";
-import { CreateModelUseCase }     from "@/application/use-cases/model/create-model.use-case";
-import { CreateElementUseCase }   from "@/application/use-cases/model/create-element.use-case";
-import { ConnectElementsUseCase } from "@/application/use-cases/model/connect-elements.use-case";
-import { CreateDiagramUseCase }   from "@/application/use-cases/diagram/create-diagram.use-case";
-import { CreateTraceLinkUseCase } from "@/application/use-cases/traceability/create-trace-link.use-case";
+import { GetProjectsUseCase }          from "@/application/use-cases/project/get-projects.use-case";
+import { CreateProjectUseCase }        from "@/application/use-cases/project/create-project.use-case";
+import { UpdateProjectUseCase }        from "@/application/use-cases/project/update-project.use-case";
+import { DeleteProjectUseCase }        from "@/application/use-cases/project/delete-project.use-case";
+import { AddMemberUseCase }            from "@/application/use-cases/project/add-member.use-case";
+import { ChangeMemberRoleUseCase }     from "@/application/use-cases/project/change-member-role.use-case";
+import { RemoveMemberUseCase }         from "@/application/use-cases/project/remove-member.use-case";
+import { CreateModelUseCase }          from "@/application/use-cases/model/create-model.use-case";
+import { CreateElementUseCase }        from "@/application/use-cases/model/create-element.use-case";
+import { UpdateElementUseCase }        from "@/application/use-cases/model/update-element.use-case";
+import { ConnectElementsUseCase }      from "@/application/use-cases/model/connect-elements.use-case";
+import { CreateDiagramUseCase }        from "@/application/use-cases/diagram/create-diagram.use-case";
+import { UpdateDiagramLayoutUseCase }  from "@/application/use-cases/diagram/update-diagram-layout.use-case";
+import { CreateTraceLinkUseCase }      from "@/application/use-cases/traceability/create-trace-link.use-case";
+import { DeleteTraceLinkUseCase }      from "@/application/use-cases/traceability/delete-trace-link.use-case";
+import { LoginUseCase }                from "@/application/use-cases/auth/login.use-case";
+import { RegisterUseCase }             from "@/application/use-cases/auth/register.use-case";
+import { LogoutUseCase }               from "@/application/use-cases/auth/logout.use-case";
 
 function resolveStrategy(): BackendStrategy {
   if (process.env.NEXT_PUBLIC_MOCK_API === "true") {
@@ -40,22 +49,33 @@ if (typeof window !== "undefined") {
 }
 
 export const container = {
+  // ─── Auth ──────────────────────────────────────────────────────────────────
+  login:    new LoginUseCase(repos.auth),
+  register: new RegisterUseCase(repos.auth),
+  logout:   new LogoutUseCase(repos.auth),
+
   // ─── Project ───────────────────────────────────────────────────────────────
-  getProjects:    new GetProjectsUseCase(repos.project),
-  createProject:  new CreateProjectUseCase(repos.project),
-  updateProject:  new UpdateProjectUseCase(repos.project),
-  deleteProject:  new DeleteProjectUseCase(repos.project),
+  getProjects:      new GetProjectsUseCase(repos.project),
+  createProject:    new CreateProjectUseCase(repos.project),
+  updateProject:    new UpdateProjectUseCase(repos.project),
+  deleteProject:    new DeleteProjectUseCase(repos.project),
+  addMember:        new AddMemberUseCase(repos.project),
+  changeMemberRole: new ChangeMemberRoleUseCase(repos.project),
+  removeMember:     new RemoveMemberUseCase(repos.project),
 
   // ─── Model ─────────────────────────────────────────────────────────────────
   createModel:     new CreateModelUseCase(repos.model),
   createElement:   new CreateElementUseCase(repos.model),
+  updateElement:   new UpdateElementUseCase(repos.model),
   connectElements: new ConnectElementsUseCase(repos.model),
 
   // ─── Diagram ───────────────────────────────────────────────────────────────
-  createDiagram: new CreateDiagramUseCase(repos.diagram, repos.model),
+  createDiagram:        new CreateDiagramUseCase(repos.diagram, repos.model),
+  updateDiagramLayout:  new UpdateDiagramLayoutUseCase(repos.diagram),
 
   // ─── Traceability ──────────────────────────────────────────────────────────
   createTraceLink: new CreateTraceLinkUseCase(repos.traceLink, repos.model),
+  deleteTraceLink: new DeleteTraceLinkUseCase(repos.traceLink),
 
   // ─── Raw repositories (برای React Query hooks) ────────────────────────────
   repos,

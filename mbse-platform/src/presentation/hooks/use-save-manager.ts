@@ -33,7 +33,10 @@ export function useSaveManager() {
         position: n.position,
         size: { width: n.width ?? 160, height: n.height ?? 60 },
       }));
-      await container.repos.diagram.updateLayout(diagramId, { elementLayouts: layouts });
+      await container.updateDiagramLayout.execute({
+        diagramId,
+        layout: { elementLayouts: layouts },
+      });
       resetPending();
       setSaveStatus("saved");
     } catch {

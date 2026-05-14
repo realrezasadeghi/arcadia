@@ -123,12 +123,12 @@ function DiagramCanvasInner({
     try {
       pushHistory();
       const element = await container.createElement.execute({ modelId, type: typeValue, name: ElementType.from(typeValue).labelFa });
-      await container.repos.diagram.updateLayout(diagramId, {
+      await container.updateDiagramLayout.execute({ diagramId, layout: {
         elementLayouts: [
           ...nodes.map((n) => ({ elementId: n.data.elementId, position: n.position, size: { width: n.width ?? 160, height: n.height ?? 60 } })),
           { elementId: element.id, position, size: { width: 160, height: 60 } },
         ],
-      });
+      } });
       addNode({
         id: element.id, type: "architecture-node", position,
         data: { elementId: element.id, elementType: element.type.value as ElementTypeValue, name: element.name, description: element.description, status: element.status, modelId },

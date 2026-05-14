@@ -27,14 +27,14 @@ export function useLogin() {
 
   return useMutation({
     mutationFn: (input: { email: string; password: string }) =>
-      container.repos.auth.login(input),
+      container.login.execute(input),
     onSuccess: ({ user }) => {
       setUser(user);
       const redirect = searchParams.get("redirect") ?? "/projects";
       router.push(redirect);
       toast.success("خوش آمدید", { description: user.name });
     },
-    onError: () => toast.error("ورود ناموفق", { description: "ایمیل یا رمز عبور اشتباه است" }),
+    onError: (e: Error) => toast.error("ورود ناموفق", { description: e.message }),
   });
 }
 
@@ -44,13 +44,13 @@ export function useRegister() {
 
   return useMutation({
     mutationFn: (input: { name: string; email: string; password: string }) =>
-      container.repos.auth.register(input),
+      container.register.execute(input),
     onSuccess: ({ user }) => {
       setUser(user);
       router.push("/projects");
       toast.success("حساب ایجاد شد", { description: `خوش آمدید، ${user.name}` });
     },
-    onError: () => toast.error("ثبت‌نام ناموفق"),
+    onError: (e: Error) => toast.error("ثبت‌نام ناموفق", { description: e.message }),
   });
 }
 
@@ -59,7 +59,7 @@ export function useLogout() {
   const router = useRouter();
 
   return useMutation({
-    mutationFn: () => container.repos.auth.logout(),
+    mutationFn: () => container.logout.execute(),
     onSuccess: () => {
       clearUser();
       router.push("/login");
