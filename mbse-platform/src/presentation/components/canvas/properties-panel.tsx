@@ -8,8 +8,8 @@ import { Label } from "@/presentation/components/ui/label";
 import { Badge } from "@/presentation/components/ui/badge";
 import { Separator } from "@/presentation/components/ui/separator";
 import { ElementType } from "@/domain/value-objects/element-type.vo";
-import { RelationshipType } from "@/domain/value-objects/relationship-type.vo";
-import { TraceLinkType } from "@/domain/value-objects/relationship-type.vo";
+import { RelationshipType, TraceLinkType } from "@/domain/value-objects/relationship-type.vo";
+import { getElementVisual, getEdgeVisual, getTraceVisual } from "@/presentation/config/visual.config";
 import { useCanvasStore } from "@/presentation/stores/canvas.store";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { container } from "@/infrastructure/api/service-container";
@@ -105,7 +105,7 @@ function NodeProperties({
   const deleteTrace = useDeleteTraceLink();
 
   const elementType = ElementType.from(node.data.elementType);
-  const spec = elementType.visualSpec;
+  const spec = getElementVisual(elementType.value);
 
   function handleSave() {
     if (!name.trim()) return;
@@ -244,7 +244,8 @@ function NodeProperties({
             {traces.map((tr) => {
               const isSource = tr.sourceElementId === node.data.elementId;
               const otherLayer = isSource ? tr.targetLayer : tr.sourceLayer;
-              const traceSpec = TraceLinkType.from(tr.type.value).visualSpec;
+              const traceType = TraceLinkType.from(tr.type.value);
+              const traceSpec = getTraceVisual(traceType.value);
               return (
                 <div
                   key={tr.id}
@@ -255,7 +256,7 @@ function NodeProperties({
                     style={{ backgroundColor: traceSpec.strokeColor }}
                   />
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium">{traceSpec.labelFa}</p>
+                    <p className="text-xs font-medium">{traceType.labelFa}</p>
                     <p className="text-[10px] text-muted-foreground">
                       {isSource ? "→" : "←"} {otherLayer.labelFa}
                     </p>
@@ -300,7 +301,7 @@ function NodeProperties({
 
 function EdgeProperties({ edgeData }: { edgeData: NonNullable<ReturnType<typeof useCanvasStore.getState>["edges"][0]["data"]> }) {
   const relType = RelationshipType.from(edgeData.relationshipType);
-  const spec = relType.visualSpec;
+  const spec = getEdgeVisual(relType.value);
 
   return (
     <div className="flex flex-col gap-3">
@@ -309,7 +310,7 @@ function EdgeProperties({ edgeData }: { edgeData: NonNullable<ReturnType<typeof 
           className="h-1 w-6 rounded-full"
           style={{ backgroundColor: spec.strokeColor }}
         />
-        <span className="text-xs text-muted-foreground">{spec.labelFa}</span>
+        <span className="text-xs text-muted-foreground">{relType.labelFa}</span>
       </div>
       {edgeData.name && (
         <div>

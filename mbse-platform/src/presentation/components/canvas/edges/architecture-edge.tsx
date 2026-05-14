@@ -5,7 +5,7 @@ import {
   getBezierPath, EdgeLabelRenderer, BaseEdge,
   type EdgeProps,
 } from "reactflow";
-import { RelationshipType } from "@/domain/value-objects/relationship-type.vo";
+import { getEdgeVisual } from "@/presentation/config/visual.config";
 import type { RelationshipEdgeData } from "@/presentation/stores/canvas.store";
 
 function ArchitectureEdgeComponent({
@@ -18,10 +18,7 @@ function ArchitectureEdgeComponent({
     targetX, targetY, targetPosition,
   });
 
-  const relType = data?.relationshipType
-    ? RelationshipType.from(data.relationshipType)
-    : null;
-  const spec = relType?.visualSpec;
+  const spec = data?.relationshipType ? getEdgeVisual(data.relationshipType) : null;
 
   const strokeColor = spec?.strokeColor ?? "#94a3b8";
   const strokeWidth = selected ? (spec?.strokeWidth ?? 1.5) + 1 : (spec?.strokeWidth ?? 1.5);

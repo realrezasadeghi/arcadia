@@ -3,6 +3,7 @@
 import { memo } from "react";
 import { Handle, Position, type NodeProps } from "reactflow";
 import { ElementType } from "@/domain/value-objects/element-type.vo";
+import { getElementVisual } from "@/presentation/config/visual.config";
 import { cn } from "@/presentation/lib/utils";
 import type { ElementNodeData } from "@/presentation/stores/canvas.store";
 
@@ -12,15 +13,9 @@ const STATUS_RING: Record<string, string> = {
   DEPRECATED: "ring-2 ring-red-400/70 opacity-60",
 };
 
-/**
- * ArchitectureNode — Custom React Flow Node
- *
- * یک component واحد که از ElementType.visualSpec برای رنگ و شکل استفاده می‌کند.
- * مطابق صد در صد با ظاهر Capella.
- */
 function ArchitectureNodeComponent({ data, selected }: NodeProps<ElementNodeData>) {
   const elementType = ElementType.from(data.elementType);
-  const spec = elementType.visualSpec;
+  const spec = getElementVisual(elementType.value);
 
   const isEllipse = spec.shape === "ellipse";
   const isRounded = spec.shape === "rounded-rectangle";
@@ -41,7 +36,6 @@ function ArchitectureNodeComponent({ data, selected }: NodeProps<ElementNodeData
         color: spec.strokeColor,
       }}
     >
-      {/* Status dot */}
       {data.status === "VALIDATED" && (
         <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-green-500 border-2 border-background" />
       )}
@@ -49,17 +43,12 @@ function ArchitectureNodeComponent({ data, selected }: NodeProps<ElementNodeData
         <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-red-400 border-2 border-background" />
       )}
 
-      {/* Type label (tiny, top) */}
-      <span
-        className="absolute -top-4 right-0 left-0 text-center text-[9px] text-muted-foreground truncate px-1"
-      >
+      <span className="absolute -top-4 right-0 left-0 text-center text-[9px] text-muted-foreground truncate px-1">
         {elementType.label}
       </span>
 
-      {/* Main name */}
       <span className="line-clamp-2 break-words">{data.name}</span>
 
-      {/* React Flow Handles */}
       <Handle type="target" position={Position.Top}    className="!h-2 !w-2 !border !border-current !bg-background" />
       <Handle type="source" position={Position.Bottom} className="!h-2 !w-2 !border !border-current !bg-background" />
       <Handle type="target" position={Position.Right}  className="!h-2 !w-2 !border !border-current !bg-background" />

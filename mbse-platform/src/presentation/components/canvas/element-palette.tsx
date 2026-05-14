@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/presentation/components/ui/tooltip";
 import { Separator } from "@/presentation/components/ui/separator";
 import { ElementType } from "@/domain/value-objects/element-type.vo";
+import { getElementVisual } from "@/presentation/config/visual.config";
 import { Layer } from "@/domain/value-objects/layer.vo";
 import type { ElementTypeValue } from "@/domain/value-objects/element-type.vo";
 
@@ -12,12 +13,6 @@ interface ElementPaletteProps {
   onDragStart: (type: ElementTypeValue) => void;
 }
 
-/**
- * ElementPalette
- *
- * نمایش المنت‌های قابل استفاده در لایه جاری.
- * کاربر روی هر المنت drag می‌کند تا روی canvas رها کند.
- */
 export function ElementPalette({ layer, onDragStart }: ElementPaletteProps) {
   const elementTypes = ElementType.allForLayer(layer);
 
@@ -41,7 +36,7 @@ export function ElementPalette({ layer, onDragStart }: ElementPaletteProps) {
 
       <div className="flex flex-col gap-0.5 p-2">
         {elementTypes.map((et) => {
-          const spec = et.visualSpec;
+          const spec = getElementVisual(et.value);
           return (
             <Tooltip key={et.value}>
               <TooltipTrigger asChild>
@@ -50,7 +45,6 @@ export function ElementPalette({ layer, onDragStart }: ElementPaletteProps) {
                   onDragStart={(e) => handleDragStart(e, et.value)}
                   className="flex items-center gap-2.5 rounded-md px-2.5 py-1.5 cursor-grab active:cursor-grabbing hover:bg-accent transition-colors select-none"
                 >
-                  {/* Color swatch */}
                   <span
                     className="h-5 w-5 shrink-0 border"
                     style={{
@@ -59,12 +53,12 @@ export function ElementPalette({ layer, onDragStart }: ElementPaletteProps) {
                       borderRadius: spec.shape === "ellipse" ? "50%" : spec.shape === "rounded-rectangle" ? "6px" : "2px",
                     }}
                   />
-                  <span className="text-xs leading-tight">{spec.labelFa}</span>
+                  <span className="text-xs leading-tight">{et.labelFa}</span>
                 </div>
               </TooltipTrigger>
               <TooltipContent side="right" className="text-xs">
-                <p className="font-medium">{spec.label}</p>
-                <p className="text-muted-foreground">{spec.labelFa}</p>
+                <p className="font-medium">{et.label}</p>
+                <p className="text-muted-foreground">{et.labelFa}</p>
               </TooltipContent>
             </Tooltip>
           );

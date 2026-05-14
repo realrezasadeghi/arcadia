@@ -20,6 +20,7 @@ import { ConnectionDialog } from "./connection-dialog";
 import { useCanvasStore, type CanvasEdge, type CanvasNode } from "@/presentation/stores/canvas.store";
 import { useSaveManager } from "@/presentation/hooks/use-save-manager";
 import { ElementType } from "@/domain/value-objects/element-type.vo";
+import { getElementVisual } from "@/presentation/config/visual.config";
 import { ConnectionPolicy } from "@/domain/policies/connection.policy";
 import { Layer } from "@/domain/value-objects/layer.vo";
 import { container } from "@/infrastructure/api/service-container";
@@ -193,7 +194,7 @@ function DiagramCanvasInner({
               position="bottom-left"
               className="!bg-card !border !border-border rounded-lg overflow-hidden"
               nodeColor={(node) => {
-                try { return ElementType.from((node.data as CanvasNode["data"]).elementType).visualSpec.strokeColor; }
+                try { return getElementVisual(ElementType.from((node.data as CanvasNode["data"]).elementType).value).strokeColor; }
                 catch { return "#94a3b8"; }
               }}
             />

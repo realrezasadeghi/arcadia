@@ -8,6 +8,7 @@ import { Badge } from "@/presentation/components/ui/badge";
 import { Layer } from "@/domain/value-objects/layer.vo";
 import { ElementType } from "@/domain/value-objects/element-type.vo";
 import { TraceLinkType } from "@/domain/value-objects/relationship-type.vo";
+import { getTraceVisual, getElementVisual } from "@/presentation/config/visual.config";
 import { useTraceLinks } from "@/presentation/hooks/use-trace-links";
 import { useModels, useElements } from "@/presentation/hooks/use-models";
 import { useProject } from "@/presentation/hooks/use-projects";
@@ -176,7 +177,7 @@ function LayerPairMatrix({ upper, lower, label, models, traceLinks }: LayerPairM
                       (tr.sourceElementId === colEl.id && tr.targetElementId === rowEl.id)
                   );
                   const traceSpec = traceLinkForCell
-                    ? TraceLinkType.from(traceLinkForCell.type.value).visualSpec
+                    ? getTraceVisual(traceLinkForCell.type.value)
                     : null;
 
                   return (
@@ -240,7 +241,7 @@ function LayerPill({ layer }: { layer: Layer }) {
 
 function ElementDot({ elementType }: { elementType: ElementTypeValue }) {
   try {
-    const spec = ElementType.from(elementType).visualSpec;
+    const spec = getElementVisual(elementType);
     return (
       <span
         className="inline-block h-2.5 w-2.5 rounded-sm border shrink-0"

@@ -9,6 +9,7 @@ import { Button } from "@/presentation/components/ui/button";
 import { Input } from "@/presentation/components/ui/input";
 import { Label } from "@/presentation/components/ui/label";
 import { RelationshipType } from "@/domain/value-objects/relationship-type.vo";
+import { getEdgeVisual } from "@/presentation/config/visual.config";
 import type { RelationshipTypeValue } from "@/presentation/stores/canvas.store";
 
 interface ConnectionDialogProps {
@@ -42,7 +43,7 @@ export function ConnectionDialog({ open, allowedTypes, onConfirm, onCancel }: Co
           <div className="flex flex-col gap-1">
             {allowedTypes.map((typeValue) => {
               const rt = RelationshipType.from(typeValue);
-              const spec = rt.visualSpec;
+              const spec = getEdgeVisual(typeValue);
               const isSelected = selectedType === typeValue;
               return (
                 <button
@@ -53,7 +54,7 @@ export function ConnectionDialog({ open, allowedTypes, onConfirm, onCancel }: Co
                   }`}
                 >
                   <span className="h-1 w-6 rounded-full shrink-0" style={{ backgroundColor: spec.strokeColor }} />
-                  <span className="flex-1 text-right">{spec.labelFa}</span>
+                  <span className="flex-1 text-right">{rt.labelFa}</span>
                 </button>
               );
             })}

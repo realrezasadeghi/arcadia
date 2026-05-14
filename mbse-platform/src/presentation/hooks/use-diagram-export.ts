@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import { useCanvasStore } from "@/presentation/stores/canvas.store";
 import { ElementType } from "@/domain/value-objects/element-type.vo";
 import { RelationshipType } from "@/domain/value-objects/relationship-type.vo";
+import { getElementVisual, getEdgeVisual } from "@/presentation/config/visual.config";
 import type { Layer } from "@/domain/value-objects/layer.vo";
 import type { ElementTypeValue, RelationshipTypeValue } from "@/presentation/stores/canvas.store";
 
@@ -66,7 +67,7 @@ export function useDiagramExport({ diagramName, projectName, layer }: UseDiagram
     const date = new Date().toLocaleDateString("fa-IR");
 
     const elementsRows = nodes.map((n) => {
-      const spec = ElementType.from(n.data.elementType as ElementTypeValue).visualSpec;
+      const spec = getElementVisual(n.data.elementType as ElementTypeValue);
       const statusLabel = { DRAFT: "پیش‌نویس", VALIDATED: "اعتبارسنجی‌شده", DEPRECATED: "منسوخ" }[n.data.status];
       return `
         <tr>
@@ -82,7 +83,7 @@ export function useDiagramExport({ diagramName, projectName, layer }: UseDiagram
 
     const edgesRows = edges.map((e) => {
       if (!e.data) return "";
-      const spec = RelationshipType.from(e.data.relationshipType as RelationshipTypeValue).visualSpec;
+      const spec = getEdgeVisual(e.data.relationshipType as RelationshipTypeValue);
       const srcName = nodes.find((n) => n.id === e.source)?.data.name ?? e.source;
       const tgtName = nodes.find((n) => n.id === e.target)?.data.name ?? e.target;
       return `

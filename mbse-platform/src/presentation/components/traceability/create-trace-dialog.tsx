@@ -8,6 +8,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/presentation/components/ui/dialog";
 import { ElementType } from "@/domain/value-objects/element-type.vo";
+import { getElementVisual } from "@/presentation/config/visual.config";
 import { Layer } from "@/domain/value-objects/layer.vo";
 import { TracePolicy } from "@/domain/policies/trace.policy";
 import { useModels, useElements } from "@/presentation/hooks/use-models";
@@ -137,7 +138,7 @@ export function CreateTraceDialog({
                   ) : (
                     <div className="flex flex-col gap-1 max-h-48 overflow-y-auto border rounded-md p-1">
                       {filteredTargetElements.map((el) => {
-                        const spec = ElementType.from(el.type.value as ElementTypeValue).visualSpec;
+                        const spec = getElementVisual(el.type.value as ElementTypeValue);
                         return (
                           <button
                             key={el.id}
